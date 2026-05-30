@@ -378,7 +378,7 @@ let data = { leads:[], clientes:[], contratos:[], faturas:[], despesas:[], metaM
 
 // ─── FIELD MAPPING (DB snake_case → JS camelCase) ─────────────────────────────
 const mapLead    = r => ({id:r.id, nome:r.nome, nicho:r.nicho, proj:r.proj, status:r.status, valorEstimado:r.valor_estimado?String(r.valor_estimado):'', tipo:r.tipo, followup:r.followup, obs:r.obs, contatoData:r.contato_data, clienteId:r.cliente_id});
-const mapCliente = r => ({id:r.id, nome:r.nome, empresa:r.empresa, instagram:r.instagram, proj:r.proj, status:r.status, comoConheceu:r.como_conheceu, observacao:r.observacao, leadId:r.lead_id, av:r.av, createdAt:r.created_at});
+const mapCliente = r => ({id:r.id, nome:r.nome, empresa:r.empresa, instagram:r.instagram, proj:r.proj, status:r.status, comoConheceu:r.como_conheceu, observacao:r.observacao, leadId:r.lead_id, av:r.av, createdAt:r.created_at, cidade:r.cidade||'', estado:r.estado||'', pais:r.pais||'Brasil'});
 const mapContrato= r => ({id:r.id, clienteId:r.cliente_id, valor:r.valor, recorrencia:r.recorrencia, dataInicio:r.data_inicio, vencimento:r.vencimento, status:r.status, moeda:r.moeda, diaVencimento:r.dia_vencimento||null});
 const mapFatura  = r => ({id:r.id, clienteId:r.cliente_id, contratoId:r.contrato_id, mes:r.mes, valor:r.valor, status:r.status, dataPagamento:r.data_pagamento});
 const mapDespesa = r => ({id:r.id, item:r.item, valor:r.valor, periodo:r.periodo, categoria:r.categoria, data:r.data});
@@ -638,6 +638,13 @@ function openConvertLeadForm(leadId){
     <div class="form-row"><label class="form-label">Nome completo</label><input class="form-input" id="c_nome" value="${l.nome}"></div>
     <div class="form-row"><label class="form-label">Empresa</label><input class="form-input" id="c_empresa" placeholder="Nome da empresa"></div>
     <div class="form-row"><label class="form-label">Instagram</label><input class="form-input" id="c_instagram" placeholder="@usuario"></div>
+    <div class="form-row"><label class="form-label">Localização</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <input class="form-input" id="c_cidade" placeholder="Cidade">
+        <input class="form-input" id="c_estado" placeholder="Estado (ex: SP)">
+      </div>
+      <input class="form-input" id="c_pais" placeholder="País" value="Brasil">
+    </div>
     <div class="form-row"><label class="form-label">Origem</label><select class="form-input" id="c_conheceu">${ORIGENS.map(o=>`<option>${o}</option>`).join('')}</select></div>
     <div class="form-row"><label class="form-label">Observação</label><textarea class="form-input" id="c_obs">${l.obs||''}</textarea></div>
     <div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px;margin-top:8px">Contrato</div>
@@ -659,7 +666,7 @@ async function convertLead(leadId){
   const av=nome.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
   const valor=parseFloat((val('ct_valor')||'0').replace(',','.'))||0;
 
-  const {data:cRow,error:cErr}=await sb.from('clientes').insert({nome,empresa:val('c_empresa'),instagram:val('c_instagram'),proj:l.proj,status:'Ativo',como_conheceu:val('c_conheceu'),observacao:val('c_obs'),lead_id:leadId,av}).select().single();
+  const {data:cRow,error:cErr}=await sb.from('clientes').insert({nome,empresa:val('c_empresa'),instagram:val('c_instagram'),proj:l.proj,status:'Ativo',como_conheceu:val('c_conheceu'),observacao:val('c_obs'),lead_id:leadId,av,cidade:val('c_cidade')||null,estado:val('c_estado')||null,pais:val('c_pais')||'Brasil'}).select().single();
   if(cErr){ toast('Erro ao criar cliente: '+cErr.message); return; }
 
   const {data:ctRow,error:ctErr}=await sb.from('contratos').insert({cliente_id:cRow.id,valor,recorrencia:val('ct_recorrencia')||'Mensal',data_inicio:val('ct_inicio')||new Date().toISOString().slice(0,10),vencimento:val('ct_vencimento')||null,status:'Ativo',moeda:data.currency||'BRL',dia_vencimento:parseInt(val('ct_dia_venc'))||null}).select().single();
@@ -767,6 +774,7 @@ function renderClientes(){
           <div style="display:flex;gap:16px;flex-wrap:wrap">
             <div><strong>Instagram:</strong> ${c.instagram||'—'}</div>
             <div><strong>Origem:</strong> ${c.comoConheceu||'—'}</div>
+            ${(c.cidade||c.estado||c.pais)?`<div><strong>📍</strong> ${[c.cidade,c.estado,c.pais].filter(Boolean).join(' · ')}</div>`:''}
           </div>
           ${c.observacao?`<div style="margin-top:8px"><strong>Obs:</strong> ${c.observacao}</div>`:''}
         </div>
@@ -807,7 +815,7 @@ async function saveCliente(){
   const av=nome.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
   const valor=parseFloat((val('ct_valor')||'0').replace(',','.'))||0;
 
-  const {data:cRow,error:cErr}=await sb.from('clientes').insert({nome,empresa:val('c_empresa'),instagram:val('c_instagram'),proj:val('c_proj')||'jp',status:'Ativo',como_conheceu:val('c_conheceu'),observacao:val('c_obs'),lead_id:null,av}).select().single();
+  const {data:cRow,error:cErr}=await sb.from('clientes').insert({nome,empresa:val('c_empresa'),instagram:val('c_instagram'),proj:val('c_proj')||'jp',status:'Ativo',como_conheceu:val('c_conheceu'),observacao:val('c_obs'),lead_id:null,av,cidade:val('c_cidade')||null,estado:val('c_estado')||null,pais:val('c_pais')||'Brasil'}).select().single();
   if(cErr){ toast('Erro ao salvar cliente: '+cErr.message); return; }
   data.clientes.unshift(mapCliente(cRow));
 
@@ -829,6 +837,13 @@ function openClienteEdit(id){
     <div class="form-row"><label class="form-label">Nome</label><input class="form-input" id="c_nome" value="${c.nome}"></div>
     <div class="form-row"><label class="form-label">Empresa</label><input class="form-input" id="c_empresa" value="${c.empresa||''}"></div>
     <div class="form-row"><label class="form-label">Instagram</label><input class="form-input" id="c_instagram" value="${c.instagram||''}"></div>
+    <div class="form-row"><label class="form-label">Localização</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <input class="form-input" id="c_cidade" placeholder="Cidade" value="${c.cidade||''}">
+        <input class="form-input" id="c_estado" placeholder="Estado (ex: SP)" value="${c.estado||''}">
+      </div>
+      <input class="form-input" id="c_pais" placeholder="País" value="${c.pais||'Brasil'}">
+    </div>
     <div class="form-row"><label class="form-label">Status</label><select class="form-input" id="c_status"><option ${c.status==='Ativo'?'selected':''}>Ativo</option><option ${c.status==='Inativo'?'selected':''}>Inativo</option></select></div>
     <div class="form-row"><label class="form-label">Projeto</label><select class="form-input" id="c_proj">${Object.keys(PROJ).map(p=>`<option value="${p}" ${c.proj===p?'selected':''}>${PROJ[p]}</option>`).join('')}</select></div>
     <div class="form-row"><label class="form-label">Origem</label><select class="form-input" id="c_conheceu">${ORIGENS.map(o=>`<option ${(c.comoConheceu||'').toLowerCase()===o.toLowerCase()?'selected':''}>${o}</option>`).join('')}</select></div>
@@ -857,10 +872,10 @@ async function updateCliente(id){
   let statusFinal=val('c_status')||c.status;
   if(novoVencimento && novoVencimento >= hoje) statusFinal='Ativo';
 
-  const cPayload={nome,empresa:val('c_empresa'),instagram:val('c_instagram'),status:statusFinal,proj:val('c_proj')||c.proj,como_conheceu:val('c_conheceu')||c.comoConheceu,observacao:val('c_obs'),av:nome.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase()};
+  const cPayload={nome,empresa:val('c_empresa'),instagram:val('c_instagram'),status:statusFinal,proj:val('c_proj')||c.proj,como_conheceu:val('c_conheceu')||c.comoConheceu,observacao:val('c_obs'),av:nome.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase(),cidade:val('c_cidade')||null,estado:val('c_estado')||null,pais:val('c_pais')||'Brasil'};
   const {error:cErr}=await sb.from('clientes').update(cPayload).eq('id',id);
   if(cErr){ toast('Erro ao atualizar cliente'); return; }
-  Object.assign(c,{nome:cPayload.nome,empresa:cPayload.empresa,instagram:cPayload.instagram,status:statusFinal,proj:cPayload.proj,comoConheceu:cPayload.como_conheceu,observacao:cPayload.observacao,av:cPayload.av});
+  Object.assign(c,{nome:cPayload.nome,empresa:cPayload.empresa,instagram:cPayload.instagram,status:statusFinal,proj:cPayload.proj,comoConheceu:cPayload.como_conheceu,observacao:cPayload.observacao,av:cPayload.av,cidade:cPayload.cidade,estado:cPayload.estado,pais:cPayload.pais});
 
   const valor=parseFloat((val('ct_valor')||'0').replace(',','.'))||0;
   let ct=getContratoAtivo(id);

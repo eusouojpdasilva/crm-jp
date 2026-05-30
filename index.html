@@ -646,50 +646,95 @@ async function convertLead(leadId){
 }
 
 // ─── CLIENTES ─────────────────────────────────────────────────────────────────
+let clienteTab = 'ativos'; // 'ativos' | 'inativos'
+function setClienteTab(t){ clienteTab=t; render(); }
+
+// Um cliente é considerado inativo se status='Inativo' OU contrato vencido
+function isClienteVencido(c){
+  if(c.status==='Inativo') return true;
+  const ct=getContratoAtivo(c.id);
+  if(!ct||!ct.vencimento) return false;
+  return ct.vencimento < new Date().toISOString().slice(0,10);
+}
+
 function renderClientes(){
-  // SUPABASE: await supabase.from('clientes').select('*,contratos(*),leads(nome)').order('created_at',{ascending:false})
-  const clientes=filtered(data.clientes);
-  const ativos=clientes.filter(c=>c.status==='Ativo').length;
-  let h=`<div class="section-header"><span class="section-title">Clientes — ${ativos} ativo${ativos!==1?'s':''} / ${clientes.length} total</span></div>`;
-  if(!clientes.length){
-    h+=`<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Nenhum cliente. Converta um lead ou adicione manualmente.</div></div>`;
+  // SUPABASE: await supabase.from('clientes').select('*,contratos(*),leads(*)').order('created_at',{ascending:false})
+  const todos = filtered(data.clientes);
+  const ativos   = todos.filter(c=>!isClienteVencido(c));
+  const inativos = todos.filter(c=> isClienteVencido(c));
+  const lista    = clienteTab==='ativos' ? ativos : inativos;
+
+  // Cabeçalho com tabs
+  let h=`
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+    <div style="display:flex;gap:4px">
+      <button onclick="setClienteTab('ativos')" style="padding:7px 18px;border-radius:4px;border:1px solid ${clienteTab==='ativos'?'rgba(93,202,165,0.4)':'var(--border)'};background:${clienteTab==='ativos'?'rgba(93,202,165,0.08)':'transparent'};color:${clienteTab==='ativos'?'var(--green)':'var(--text3)'};font-family:'Raleway',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s">
+        Ativos <span style="margin-left:6px;background:${clienteTab==='ativos'?'rgba(93,202,165,0.15)':'var(--bg3)'};padding:1px 7px;border-radius:10px;font-size:10px">${ativos.length}</span>
+      </button>
+      <button onclick="setClienteTab('inativos')" style="padding:7px 18px;border-radius:4px;border:1px solid ${clienteTab==='inativos'?'rgba(226,75,74,0.4)':'var(--border)'};background:${clienteTab==='inativos'?'rgba(226,75,74,0.08)':'transparent'};color:${clienteTab==='inativos'?'var(--red)':'var(--text3)'};font-family:'Raleway',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s">
+        Inativos <span style="margin-left:6px;background:${clienteTab==='inativos'?'rgba(226,75,74,0.12)':'var(--bg3)'};padding:1px 7px;border-radius:10px;font-size:10px">${inativos.length}</span>
+      </button>
+    </div>
+    <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3)">${todos.length} clientes no total</span>
+  </div>`;
+
+  if(!lista.length){
+    const msg = clienteTab==='ativos'
+      ? 'Nenhum cliente ativo. Converta um lead ou adicione manualmente.'
+      : 'Nenhum cliente inativo ou com contrato vencido.';
+    h+=`<div class="empty-state"><div class="empty-icon">${clienteTab==='ativos'?'📋':'🗂️'}</div><div class="empty-text">${msg}</div></div>`;
   } else {
     h+=`<div class="clients-grid">`;
-    clientes.forEach(c=>{
+    lista.forEach(c=>{
       const ct=getContratoAtivo(c.id);
       const lead=c.leadId?data.leads.find(l=>l.id===c.leadId):null;
+      const vencido=isClienteVencido(c);
       const recCor=ct?((ct.recorrencia||'').toLowerCase().includes('mensal')?'var(--green)':(ct.recorrencia||'').toLowerCase().includes('único')?'var(--amber)':'var(--blue)'):'var(--text3)';
-      h+=`<div class="client-card">
+
+      // Info de vencimento para inativos
+      let diasDesdeVenc='';
+      if(vencido && ct && ct.vencimento){
+        const diffMs=new Date()-new Date(ct.vencimento+'T00:00:00');
+        const dias=Math.floor(diffMs/86400000);
+        diasDesdeVenc=dias===0?'venceu hoje':`venceu há ${dias} dia${dias!==1?'s':''}`;
+      }
+
+      h+=`<div class="client-card" style="${vencido?'opacity:0.8;border-color:rgba(226,75,74,0.15)':''}">
         <div class="client-header">
-          <div class="avatar" style="background:${AV_BG[c.proj]};color:${AV_COLOR[c.proj]}">${c.av||c.nome.slice(0,2).toUpperCase()}</div>
+          <div class="avatar" style="background:${AV_BG[c.proj]};color:${AV_COLOR[c.proj]};${vencido?'filter:grayscale(0.4)':''}">${c.av||c.nome.slice(0,2).toUpperCase()}</div>
           <div style="flex:1;min-width:0">
             <div class="client-name">${c.nome}</div>
             <div class="client-sub">
               <span class="badge ${BADGE[c.proj]}">${PROJ[c.proj]}</span>
               ${c.empresa?`<span>${c.empresa}</span>`:''}
               ${lead?`<span style="font-size:8px;color:var(--terra);background:var(--terra7);border:1px solid rgba(194,107,58,0.2);padding:1px 6px;border-radius:2px">via pipeline</span>`:''}
+              ${vencido?`<span style="font-size:8px;color:var(--red);background:rgba(226,75,74,0.1);border:1px solid rgba(226,75,74,0.2);padding:1px 6px;border-radius:2px">● Inativo</span>`:''}
             </div>
           </div>
-          <button class="btn btn-ghost" style="font-size:9px;padding:4px 10px" onclick="openClienteEdit('${c.id}')">Editar</button>
+          <button class="btn ${vencido?'':'btn-ghost'}" style="font-size:9px;padding:4px 10px;${vencido?'border-color:var(--terra);color:var(--terra)':''}" onclick="openClienteEdit('${c.id}')">
+            ${vencido?'Reativar':'Editar'}
+          </button>
         </div>
         ${ct
           ?`<div style="background:var(--bg3);border-bottom:1px solid var(--border);padding:14px 22px;display:flex;gap:28px;align-items:center;flex-wrap:wrap">
               <div><div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Contrato</div>
-                <div style="font-size:22px;font-weight:900;letter-spacing:-0.5px;color:var(--terra)">${formatCurrency(ct.valor)}</div></div>
+                <div style="font-size:22px;font-weight:900;letter-spacing:-0.5px;color:${vencido?'var(--text3)':'var(--terra)'}">${formatCurrency(ct.valor)}</div></div>
               <div><div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Recorrência</div>
-                <span style="font-size:9px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:${recCor};border:1px solid ${recCor}44;padding:2px 8px;border-radius:2px">${ct.recorrencia}</span></div>
+                <span style="font-size:9px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:${vencido?'var(--text3)':recCor};border:1px solid ${vencido?'var(--border)':recCor+'44'};padding:2px 8px;border-radius:2px">${ct.recorrencia}</span></div>
               <div><div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Início</div>
                 <div style="font-size:12px;color:var(--text2)">${ct.dataInicio||'—'}</div></div>
               <div><div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Vencimento</div>
-                <div style="font-size:12px;color:var(--text2)">${ct.vencimento||'—'}</div></div>
+                <div style="font-size:12px;color:${vencido?'var(--red)':'var(--text2)'};font-weight:${vencido?'700':'400'}">${ct.vencimento||'—'}${diasDesdeVenc?` · ${diasDesdeVenc}`:''}</div></div>
             </div>`
           :`<div style="background:rgba(239,159,39,0.05);border-bottom:1px solid rgba(239,159,39,0.15);padding:10px 22px;font-size:11px;color:var(--amber);font-weight:700">
-              ⚠ Sem contrato ativo —
+              ⚠ Sem contrato —
               <button onclick="openAddContratoForm('${c.id}')" style="background:none;border:none;color:var(--amber);text-decoration:underline;cursor:pointer;font-family:inherit;font-size:11px;font-weight:700;padding:0">Adicionar contrato</button>
             </div>`}
+        ${vencido?`<div style="background:rgba(194,107,58,0.05);border-bottom:1px solid rgba(194,107,58,0.12);padding:10px 22px;font-size:11px;color:var(--terra);font-weight:600">
+          Clique em <strong>Reativar</strong> para atualizar o contrato e reativar este cliente.
+        </div>`:''}
         <div class="client-body">
           <div style="display:flex;gap:16px;flex-wrap:wrap">
-            <div><strong>Status:</strong> <span style="color:${c.status==='Ativo'?'var(--green)':'var(--red)'}">${c.status}</span></div>
             <div><strong>Instagram:</strong> ${c.instagram||'—'}</div>
             <div><strong>Origem:</strong> ${c.comoConheceu||'—'}</div>
           </div>
@@ -773,22 +818,34 @@ function openClienteEdit(id){
 async function updateCliente(id){
   const c=data.clientes.find(x=>x.id===id); if(!c) return;
   const nome=val('c_nome')||c.nome;
-  const cPayload={nome,empresa:val('c_empresa'),instagram:val('c_instagram'),status:val('c_status')||c.status,proj:val('c_proj')||c.proj,como_conheceu:val('c_conheceu')||c.comoConheceu,observacao:val('c_obs'),av:nome.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase()};
+  const novoVencimento=val('ct_vencimento')||null;
+  const hoje=new Date().toISOString().slice(0,10);
+
+  // Reativação automática: se o novo vencimento for futuro, força status Ativo
+  let statusFinal=val('c_status')||c.status;
+  if(novoVencimento && novoVencimento >= hoje) statusFinal='Ativo';
+
+  const cPayload={nome,empresa:val('c_empresa'),instagram:val('c_instagram'),status:statusFinal,proj:val('c_proj')||c.proj,como_conheceu:val('c_conheceu')||c.comoConheceu,observacao:val('c_obs'),av:nome.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase()};
   const {error:cErr}=await sb.from('clientes').update(cPayload).eq('id',id);
   if(cErr){ toast('Erro ao atualizar cliente'); return; }
-  Object.assign(c,{nome:cPayload.nome,empresa:cPayload.empresa,instagram:cPayload.instagram,status:cPayload.status,proj:cPayload.proj,comoConheceu:cPayload.como_conheceu,observacao:cPayload.observacao,av:cPayload.av});
+  Object.assign(c,{nome:cPayload.nome,empresa:cPayload.empresa,instagram:cPayload.instagram,status:statusFinal,proj:cPayload.proj,comoConheceu:cPayload.como_conheceu,observacao:cPayload.observacao,av:cPayload.av});
 
   const valor=parseFloat((val('ct_valor')||'0').replace(',','.'))||0;
   let ct=getContratoAtivo(id);
   if(ct){
-    const ctP={valor,recorrencia:val('ct_recorrencia')||ct.recorrencia,data_inicio:val('ct_inicio')||ct.dataInicio,vencimento:val('ct_vencimento')||null};
+    const ctP={valor,recorrencia:val('ct_recorrencia')||ct.recorrencia,data_inicio:val('ct_inicio')||ct.dataInicio,vencimento:novoVencimento};
     await sb.from('contratos').update(ctP).eq('id',ct.id);
     Object.assign(ct,{valor,recorrencia:ctP.recorrencia,dataInicio:ctP.data_inicio,vencimento:ctP.vencimento});
   } else if(valor>0){
-    const {data:ctRow}=await sb.from('contratos').insert({cliente_id:id,valor,recorrencia:val('ct_recorrencia')||'Mensal',data_inicio:val('ct_inicio'),vencimento:val('ct_vencimento')||null,status:'Ativo',moeda:data.currency||'BRL'}).select().single();
+    const {data:ctRow}=await sb.from('contratos').insert({cliente_id:id,valor,recorrencia:val('ct_recorrencia')||'Mensal',data_inicio:val('ct_inicio'),vencimento:novoVencimento,status:'Ativo',moeda:data.currency||'BRL'}).select().single();
     if(ctRow) data.contratos.push(mapContrato(ctRow));
   }
-  closeModal(); render();
+
+  const reativado = statusFinal==='Ativo' && c.status!=='Ativo';
+  closeModal();
+  clienteTab='ativos'; // volta para aba ativos após reativar
+  render();
+  if(reativado) toast('Cliente reativado com sucesso!','success');
 }
 
 async function deleteCliente(id){

@@ -572,7 +572,7 @@ function openConvertLeadForm(leadId){
     <div class="form-row"><label class="form-label">Nome completo</label><input class="form-input" id="c_nome" value="${l.nome}"></div>
     <div class="form-row"><label class="form-label">Empresa</label><input class="form-input" id="c_empresa" placeholder="Nome da empresa"></div>
     <div class="form-row"><label class="form-label">Instagram</label><input class="form-input" id="c_instagram" placeholder="@usuario"></div>
-    <div class="form-row"><label class="form-label">Como me conheceu</label><select class="form-input" id="c_conheceu">${['indicação','instagram','google','LinkedIn','Upwork','youtube','outro'].map(o=>`<option>${o}</option>`).join('')}</select></div>
+    <div class="form-row"><label class="form-label">Origem</label><select class="form-input" id="c_conheceu">${ORIGENS.map(o=>`<option>${o}</option>`).join('')}</select></div>
     <div class="form-row"><label class="form-label">Observação</label><textarea class="form-input" id="c_obs">${l.obs||''}</textarea></div>
     <div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px;margin-top:8px">Contrato</div>
     <div class="form-row"><label class="form-label">Valor mensal / contratado</label><input class="form-input" id="ct_valor" value="${l.valorEstimado?l.valorEstimado.replace(/[^\d.,]/g,''):''}" placeholder="0.00"></div>
@@ -675,7 +675,7 @@ function openClienteForm(){
     <div class="form-row"><label class="form-label">Empresa</label><input class="form-input" id="c_empresa"></div>
     <div class="form-row"><label class="form-label">Instagram</label><input class="form-input" id="c_instagram" placeholder="@usuario"></div>
     <div class="form-row"><label class="form-label">Projeto</label><select class="form-input" id="c_proj">${Object.keys(PROJ).map(p=>`<option value="${p}">${PROJ[p]}</option>`).join('')}</select></div>
-    <div class="form-row"><label class="form-label">Como me conheceu</label><select class="form-input" id="c_conheceu">${['indicação','instagram','google','LinkedIn','Upwork','youtube','outro'].map(o=>`<option>${o}</option>`).join('')}</select></div>
+    <div class="form-row"><label class="form-label">Origem</label><select class="form-input" id="c_conheceu">${ORIGENS.map(o=>`<option>${o}</option>`).join('')}</select></div>
     <div class="form-row"><label class="form-label">Observação</label><textarea class="form-input" id="c_obs"></textarea></div>
     <div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px;margin-top:8px">Contrato</div>
     <div class="form-row"><label class="form-label">Valor</label><input class="form-input" id="ct_valor" placeholder="0.00"></div>
@@ -718,7 +718,7 @@ function openClienteEdit(id){
     <div class="form-row"><label class="form-label">Instagram</label><input class="form-input" id="c_instagram" value="${c.instagram||''}"></div>
     <div class="form-row"><label class="form-label">Status</label><select class="form-input" id="c_status"><option ${c.status==='Ativo'?'selected':''}>Ativo</option><option ${c.status==='Inativo'?'selected':''}>Inativo</option></select></div>
     <div class="form-row"><label class="form-label">Projeto</label><select class="form-input" id="c_proj">${Object.keys(PROJ).map(p=>`<option value="${p}" ${c.proj===p?'selected':''}>${PROJ[p]}</option>`).join('')}</select></div>
-    <div class="form-row"><label class="form-label">Como me conheceu</label><select class="form-input" id="c_conheceu">${['indicação','instagram','google','LinkedIn','Upwork','youtube','outro'].map(o=>`<option ${c.comoConheceu===o?'selected':''}>${o}</option>`).join('')}</select></div>
+    <div class="form-row"><label class="form-label">Origem</label><select class="form-input" id="c_conheceu">${ORIGENS.map(o=>`<option ${(c.comoConheceu||'').toLowerCase()===o.toLowerCase()?'selected':''}>${o}</option>`).join('')}</select></div>
     <div class="form-row"><label class="form-label">Observação</label><textarea class="form-input" id="c_obs">${c.observacao||''}</textarea></div>
     <div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px;margin-top:8px">Contrato Ativo</div>
     <div class="form-row"><label class="form-label">Valor</label><input class="form-input" id="ct_valor" value="${ct?ct.valor:''}" placeholder="0.00"></div>
@@ -726,9 +726,9 @@ function openClienteEdit(id){
     <div class="form-row"><label class="form-label">Data de início</label><input class="form-input" type="date" id="ct_inicio" value="${ct?ct.dataInicio:''}"></div>
     <div class="form-row"><label class="form-label">Vencimento</label><input class="form-input" type="date" id="ct_vencimento" value="${ct?ct.vencimento:''}"></div>
     <div class="form-actions">
-      <button class="btn btn-danger" onclick="deleteCliente(${id})">Remover</button>
+      <button class="btn btn-danger" onclick="deleteCliente('${id}')">Remover</button>
       <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
-      <button class="btn" onclick="updateCliente(${id})">Salvar</button>
+      <button class="btn" onclick="updateCliente('${id}')">Salvar</button>
     </div>
   </div>`);
 }
@@ -796,6 +796,7 @@ let finMonth = new Date().getMonth() + 1;
 function setFinPeriodo(y, m){ finYear=parseInt(y); finMonth=parseInt(m); render(); }
 function finMesStr(){ return `${finYear}-${String(finMonth).padStart(2,'0')}`; }
 const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const ORIGENS = ['Indicação','Prospecção Ativa','Anúncios','Google','Instagram','LinkedIn','Upwork','YouTube','Outro'];
 
 // ─── FATURAS (SUPABASE-READY) ───────────────────────────────────────────────
 // SUPABASE TABLE: faturas { id, clienteId, mes:'YYYY-MM', valor, status:'pago'|'pendente'|'vencido', dataPagamento }

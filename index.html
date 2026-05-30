@@ -309,9 +309,90 @@ textarea.form-input{resize:vertical;min-height:80px}
   .content{padding:20px 18px}
   .filters{padding:10px 18px}
 }
+
+/* LOGIN */
+#login-screen{
+  position:fixed;inset:0;z-index:999;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+}
+#login-screen.hidden{display:none}
+.login-card{
+  width:360px;max-width:90vw;
+  text-align:center;
+}
+.login-logo{
+  font-family:'Raleway',sans-serif;
+  font-size:18px;font-weight:900;letter-spacing:5px;text-transform:uppercase;
+  color:var(--text);margin-bottom:48px;
+}
+.login-logo span{color:var(--terra)}
+.login-divider{
+  width:32px;height:2px;background:var(--terra);
+  margin:0 auto 24px;
+}
+.login-title{
+  font-family:'DM Serif Display',serif;
+  font-size:28px;font-style:italic;
+  color:var(--text);margin-bottom:8px;line-height:1.2;
+}
+.login-sub{
+  font-size:11px;font-weight:600;letter-spacing:2px;
+  text-transform:uppercase;color:var(--text3);margin-bottom:36px;
+}
+.login-input-wrap{position:relative;margin-bottom:12px}
+.login-input{
+  width:100%;padding:14px 18px;
+  background:var(--bg2);border:1px solid var(--border2);
+  border-radius:4px;color:var(--text);
+  font-family:'Raleway',sans-serif;font-size:18px;font-weight:700;
+  text-align:center;letter-spacing:8px;outline:none;
+  transition:border .2s;
+}
+.login-input:focus{border-color:var(--terra)}
+.login-input::placeholder{letter-spacing:2px;font-size:13px;font-weight:400;color:var(--text3)}
+.login-btn{
+  width:100%;padding:13px;border-radius:4px;
+  border:1px solid var(--terra);background:var(--terra15);
+  color:var(--terra);font-family:'Raleway',sans-serif;
+  font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+  cursor:pointer;transition:all .25s ease;
+}
+.login-btn:hover{background:var(--terra);color:#fff}
+.login-error{
+  font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:var(--red);margin-top:12px;min-height:18px;transition:opacity .2s;
+}
+@keyframes shake{
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-8px)}
+  40%{transform:translateX(8px)}
+  60%{transform:translateX(-6px)}
+  80%{transform:translateX(6px)}
+}
+.shake{animation:shake .4s ease}
 </style>
 </head>
 <body>
+
+<!-- TELA DE LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">JP <span>CRM</span></div>
+    <div class="login-divider"></div>
+    <div class="login-title">Bem-vindo de volta</div>
+    <div class="login-sub">Digite sua senha para acessar</div>
+    <div class="login-input-wrap">
+      <input class="login-input" id="login-senha" type="password" placeholder="senha" maxlength="20"
+        onkeydown="if(event.key==='Enter')tentarLogin()">
+    </div>
+    <button class="login-btn" onclick="tentarLogin()">Acessar o CRM</button>
+    <div class="login-error" id="login-erro"></div>
+  </div>
+</div>
+
+<!-- CRM (oculto até login) -->
+<div id="crm-app" style="display:none">
 
 <div class="topbar">
   <div class="logo">JP <span>CRM</span></div>
@@ -344,8 +425,51 @@ textarea.form-input{resize:vertical;min-height:80px}
 
 <div class="content" id="main-content"></div>
 <div id="modal-root"></div>
+</div><!-- /crm-app -->
 
 <script>
+// ════════════════════════════════════════════════════════════════════════════
+// LOGIN
+// ════════════════════════════════════════════════════════════════════════════
+const SENHA_CRM = '1949';
+const SESSION_KEY = 'jp_crm_auth';
+
+function verificarSessao(){
+  if(sessionStorage.getItem(SESSION_KEY)==='ok'){
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('crm-app').style.display='block';
+    // Chama initData depois do script carregar
+    setTimeout(()=>initData(), 0);
+    return true;
+  }
+  // foca no campo de senha
+  setTimeout(()=>{ const el=document.getElementById('login-senha'); if(el) el.focus(); },100);
+  return false;
+}
+
+function tentarLogin(){
+  const input=document.getElementById('login-senha');
+  const erro=document.getElementById('login-erro');
+  if(!input) return;
+  if(input.value===SENHA_CRM){
+    sessionStorage.setItem(SESSION_KEY,'ok');
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('crm-app').style.display='block';
+    initData();
+  } else {
+    input.value='';
+    erro.textContent='Senha incorreta';
+    const wrap=input.closest('.login-input-wrap')||input;
+    wrap.classList.add('shake');
+    setTimeout(()=>{ wrap.classList.remove('shake'); erro.textContent=''; },2000);
+    input.focus();
+  }
+}
+
+// Verifica sessão ao carregar — se já logado inicia o CRM direto
+const _jaLogado = verificarSessao();
+// initData() será chamado aqui (sessão ativa) ou pelo tentarLogin (novo login)
+
 // ════════════════════════════════════════════════════════════════════════════
 // JP CRM — SUPABASE LIVE
 // ════════════════════════════════════════════════════════════════════════════
@@ -1264,8 +1388,7 @@ document.addEventListener('keydown', function(e){
 // ─── BOOT ─────────────────────────────────────────────────────────────────────
 const sc=document.getElementById('sel-currency'); if(sc) sc.value=(data.currency||'BRL');
 const mi=document.getElementById('meta-input'); if(mi) mi.value=(data.metaMensal||'');
-
-initData(); // carrega do Supabase e renderiza
+// initData() é chamado pelo login (tentarLogin ou verificarSessao)
 </script>
 </body>
 </html>

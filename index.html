@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JP CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700;800;900&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0a;--bg2:#111111;--bg3:#181818;--bg4:#1e1e1e;--border:#222222;--border2:#2e2e2e;
+  --terra:#C26B3A;--terra15:rgba(194,107,58,0.15);--terra7:rgba(194,107,58,0.07);--terra30:rgba(194,107,58,0.3);
+  --text:#F0EDE8;--text2:#AAAAAA;--text3:#888888;--text4:#666666;
+  --green:#5DCAA5;--blue:#85B7EB;--red:#E24B4A;--amber:#EF9F27;
+}
+
+/* NOISE TEXTURE OVERLAY */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");opacity:0.028;pointer-events:none;z-index:0}
+
+body{background:var(--bg);color:var(--text);font-family:'Raleway',sans-serif;font-size:13px;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+
+/* TOPBAR */
+.topbar{
+  background:rgba(10,10,10,0.92);
+  border-bottom:1px solid var(--border);
+  padding:0 32px;
+  display:flex;align-items:center;justify-content:space-between;
+  height:60px;position:sticky;top:0;z-index:50;
+  backdrop-filter:blur(12px);
+}
+.topbar::after{
+  content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--terra30) 30%,var(--terra30) 70%,transparent);
+}
+.logo{font-family:'Raleway',sans-serif;font-size:13px;font-weight:900;letter-spacing:4px;text-transform:uppercase;color:var(--text)}
+.logo span{color:var(--terra)}
+
+.tabs{display:flex;gap:2px}
+.tab{
+  padding:8px 20px;border-radius:0;border:none;background:transparent;
+  color:var(--text3);font-family:'Raleway',sans-serif;font-size:10px;font-weight:700;
+  letter-spacing:2.5px;text-transform:uppercase;cursor:pointer;
+  transition:all .25s ease;position:relative;
+}
+.tab::after{
+  content:'';position:absolute;bottom:-1px;left:50%;right:50%;height:1px;
+  background:var(--terra);transition:all .25s ease;
+}
+.tab.active{color:var(--text)}
+.tab.active::after{left:16px;right:16px}
+.tab:hover:not(.active){color:var(--text2)}
+
+.btn{
+  padding:8px 20px;border-radius:2px;
+  border:1px solid var(--terra);background:transparent;
+  color:var(--terra);font-family:'Raleway',sans-serif;
+  font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  cursor:pointer;transition:all .25s ease;
+}
+.btn:hover{background:var(--terra);color:#fff}
+.btn-ghost{border-color:var(--border2);background:transparent;color:var(--text3)}
+.btn-ghost:hover{border-color:var(--text3);background:transparent;color:var(--text2)}
+.btn-danger{border-color:var(--red);background:transparent;color:var(--red)}
+.btn-danger:hover{background:var(--red);color:#fff}
+
+/* FILTERS */
+.filters{
+  background:rgba(10,10,10,0.85);
+  border-bottom:1px solid var(--border);
+  padding:12px 32px;
+  display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+  position:sticky;top:60px;z-index:49;
+  backdrop-filter:blur(8px);
+}
+.filter-label{font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-right:4px}
+.pill{
+  padding:5px 16px;border-radius:2px;
+  border:1px solid var(--border2);background:transparent;
+  color:var(--text2);font-family:'Raleway',sans-serif;
+  font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  cursor:pointer;transition:all .25s ease;
+}
+.pill:hover:not(.active){border-color:#666;color:var(--text)}
+.pill[data-proj="all"].active{border-color:var(--terra);color:var(--terra);background:var(--terra7)}
+.pill[data-proj="jp"].active{border-color:var(--terra);color:var(--terra);background:rgba(194,107,58,0.08)}
+.pill[data-proj="viaja"].active{border-color:var(--green);color:var(--green);background:rgba(93,202,165,0.08)}
+.pill[data-proj="nattiva"].active{border-color:var(--blue);color:var(--blue);background:rgba(133,183,235,0.08)}
+
+/* CONTENT */
+.content{padding:36px 32px;max-width:1440px;margin:0 auto;position:relative;z-index:1}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-bottom:40px;border:1px solid var(--border);border-radius:4px;overflow:hidden;background:var(--border)}
+.stat{background:var(--bg2);padding:28px 24px;position:relative;transition:background .2s}
+.stat:hover{background:var(--bg3)}
+.stat-label{font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);margin-bottom:14px;display:block}
+.stat-value{font-size:36px;font-weight:900;line-height:1;letter-spacing:-1px;color:var(--text)}
+.stat-value.accent{color:var(--terra)}
+.stat:first-child::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--terra);opacity:0.6}
+
+/* SECTION HEADER */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.section-title{
+  font-size:9px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--text2);
+  display:flex;align-items:center;gap:12px;
+}
+.section-title::before{content:'';display:inline-block;width:20px;height:1px;background:var(--terra);opacity:0.8;flex-shrink:0}
+
+/* KANBAN */
+.kanban{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;align-items:start}
+.col{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:4px;padding:16px;min-height:240px;
+}
+.col-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);
+}
+.col-title{font-size:8px;font-weight:700;letter-spacing:3px;text-transform:uppercase}
+.col-count{
+  font-size:10px;font-weight:800;
+  background:var(--bg4);padding:2px 9px;border-radius:2px;color:var(--text2);
+  letter-spacing:1px;
+}
+
+/* Column status accents */
+.st-novo{border-top:2px solid var(--text4)}
+.st-contato{border-top:2px solid var(--blue)}
+.st-proposta{border-top:2px solid var(--terra)}
+.st-fechado{border-top:2px solid var(--green)}
+.st-perdido{border-top:2px solid var(--red)}
+.st-novo .col-title{color:var(--text3)}
+.st-contato .col-title{color:var(--blue)}
+.st-proposta .col-title{color:var(--terra)}
+.st-fechado .col-title{color:var(--green)}
+.st-perdido .col-title{color:var(--red)}
+
+/* Kanban card border-left by status */
+.st-novo .card{border-left:2px solid var(--border2)}
+.st-contato .card{border-left:2px solid rgba(133,183,235,0.4)}
+.st-proposta .card{border-left:2px solid rgba(194,107,58,0.5)}
+.st-fechado .card{border-left:2px solid rgba(93,202,165,0.5)}
+.st-perdido .card{border-left:2px solid rgba(226,75,74,0.3)}
+
+.card{
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:3px;padding:14px;
+  margin-bottom:8px;cursor:pointer;
+  transition:all .22s ease;
+}
+.card:hover{
+  border-color:var(--border2);
+  transform:translateY(-3px);
+  box-shadow:0 8px 24px rgba(0,0,0,0.5);
+  background:var(--bg4);
+}
+.card-proj{font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.card-name{font-size:13px;font-weight:800;margin-bottom:3px;color:var(--text);line-height:1.2}
+.card-nicho{font-size:11px;color:var(--text3);margin-bottom:10px;font-weight:500}
+.card-footer{display:flex;align-items:center;justify-content:space-between}
+.card-value{font-size:13px;font-weight:800;color:var(--terra);letter-spacing:-0.3px}
+.card-date{font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase}
+.card-followup{
+  font-size:9px;color:var(--amber);font-weight:700;
+  padding:3px 7px;border-radius:2px;
+  background:rgba(239,159,39,0.08);letter-spacing:0.5px;
+  border:1px solid rgba(239,159,39,0.15);
+}
+.empty-col{color:var(--text4);font-size:10px;text-align:center;padding:28px 0;letter-spacing:2px;text-transform:uppercase}
+
+/* BADGES */
+.badge{display:inline-block;font-size:8px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:3px 9px;border-radius:2px}
+.badge-jp{color:#E8845A;background:rgba(194,107,58,0.18);border:1px solid rgba(194,107,58,0.35)}
+.badge-viaja{color:#4DD9A8;background:rgba(93,202,165,0.15);border:1px solid rgba(93,202,165,0.3)}
+.badge-nattiva{color:#7EC8F5;background:rgba(133,183,235,0.15);border:1px solid rgba(133,183,235,0.3)}
+
+/* CLIENTS */
+.clients-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.client-card{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:4px;overflow:hidden;
+  transition:border-color .22s ease;
+}
+.client-card:hover{border-color:var(--border2)}
+.client-header{
+  padding:20px 22px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:16px;
+}
+.avatar{
+  width:44px;height:44px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:900;flex-shrink:0;
+  border:1px solid rgba(255,255,255,0.08);
+}
+.client-name{font-size:15px;font-weight:800;margin-bottom:5px;color:var(--text);letter-spacing:-0.2px}
+.client-sub{font-size:10px;color:var(--text2);display:flex;align-items:center;gap:8px}
+.client-body{padding:18px 22px;font-size:12px;color:var(--text3);line-height:1.7}
+.client-body strong{color:var(--text);font-weight:700}
+.tasks-header{font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
+.task-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.task-item:last-child{border-bottom:none}
+.task-cb{
+  width:17px;height:17px;border-radius:2px;
+  border:1px solid var(--border2);background:transparent;
+  cursor:pointer;flex-shrink:0;margin-top:1px;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;
+}
+.task-cb.done{background:var(--terra);border-color:var(--terra)}
+.task-cb.done::after{content:'✓';color:#fff;font-size:10px;font-weight:800}
+.task-text{font-size:12px;font-weight:500;color:var(--text);line-height:1.4}
+.task-text.done{color:var(--text3);text-decoration:line-through}
+.task-due{font-size:10px;color:var(--text2);margin-top:2px}
+.task-due.overdue{color:var(--red)}
+.task-due.soon{color:var(--amber)}
+.add-task-row{
+  width:100%;padding:8px;border:1px dashed var(--border2);background:transparent;
+  color:var(--text4);font-family:'Raleway',sans-serif;
+  font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  cursor:pointer;border-radius:2px;transition:all .22s;margin-top:10px;
+}
+.add-task-row:hover{border-color:var(--terra);color:var(--terra);background:var(--terra7)}
+
+/* FINANCEIRO TABLES */
+table thead tr th{
+  font-size:8px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+  color:var(--text2);padding:10px 10px !important;
+  border-bottom:1px solid var(--border);
+}
+table tbody tr{transition:background .15s}
+table tbody tr:nth-child(even){background:rgba(255,255,255,0.02)}
+table tbody tr:hover{background:rgba(194,107,58,0.06)}
+table tbody tr td{padding:10px 10px !important;border-bottom:1px solid var(--border);font-size:12px;color:var(--text)}
+table tbody tr:last-child td{border-bottom:none}
+
+/* MODAL */
+.modal-overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,0.82);
+  display:flex;align-items:center;justify-content:center;
+  z-index:200;backdrop-filter:blur(6px);
+}
+.modal{
+  background:var(--bg2);
+  border:1px solid var(--border2);
+  border-radius:4px;padding:32px;
+  width:480px;max-width:95vw;max-height:90vh;overflow-y:auto;
+  border-top:2px solid var(--terra);
+}
+.modal-divider{width:40px;height:2px;background:var(--terra);margin-bottom:20px}
+.modal-title{
+  font-family:'DM Serif Display',serif;
+  font-size:22px;font-weight:400;
+  color:var(--text);margin-bottom:28px;
+  font-style:italic;line-height:1.2;
+}
+.form-row{margin-bottom:18px}
+.form-label{
+  font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;
+  color:var(--text2);margin-bottom:8px;display:block;
+}
+.form-input{
+  width:100%;padding:10px 14px;
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:2px;color:var(--text);
+  font-family:'Raleway',sans-serif;font-size:13px;
+  outline:none;transition:border .2s;
+}
+.form-input:focus{border-color:var(--terra);background:var(--bg4)}
+select.form-input option{background:var(--bg3);color:var(--text)}
+textarea.form-input{resize:vertical;min-height:80px}
+.form-actions{
+  display:flex;gap:8px;justify-content:flex-end;
+  margin-top:28px;padding-top:18px;border-top:1px solid var(--border);
+}
+
+/* EMPTY */
+.empty-state{text-align:center;padding:72px 20px;color:var(--text4)}
+.empty-icon{font-size:28px;margin-bottom:14px;opacity:0.4}
+.empty-text{font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text4)}
+
+/* DELETE AREA */
+.client-actions{display:flex;justify-content:flex-end;padding:0 22px 16px}
+
+/* FINANCEIRO META BOX */
+.meta-box{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:4px;padding:20px 22px;margin-bottom:12px;
+  display:flex;align-items:center;gap:24px;
+}
+.meta-box > div{font-size:11px;color:var(--text2)}
+.meta-box strong{color:var(--text);font-size:15px;font-weight:800}
+
+@media(max-width:900px){
+  .kanban{grid-template-columns:1fr 1fr}
+  .stats{grid-template-columns:1fr 1fr}
+  .clients-grid{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .kanban{grid-template-columns:1fr}
+  .stats{grid-template-columns:1fr 1fr}
+  .topbar{padding:0 18px}
+  .content{padding:20px 18px}
+  .filters{padding:10px 18px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">JP <span>CRM</span></div>
+  <div class="tabs">
+    <button class="tab active" id="tab-pipeline" onclick="switchTab('pipeline')">Pipeline</button>
+    <button class="tab" id="tab-clientes" onclick="switchTab('clientes')">Clientes</button>
+    <button class="tab" id="tab-financeiro" onclick="switchTab('financeiro')">Financeiro</button>
+  </div>
+  <button class="btn" id="main-btn" onclick="handleMainBtn()">+ Novo Lead</button>
+</div>
+
+<div class="filters">
+  <span class="filter-label">Projeto</span>
+  <button class="pill active" data-proj="all" onclick="setFilter(this,'all')">Todos</button>
+  <button class="pill" data-proj="jp" onclick="setFilter(this,'jp')">Eu Sou o JP</button>
+  <button class="pill" data-proj="viaja" onclick="setFilter(this,'viaja')">JP Viaja</button>
+  <button class="pill" data-proj="nattiva" onclick="setFilter(this,'nattiva')">Nattiva Travel</button>
+  <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+    <label class="filter-label">Moeda</label>
+    <select class="form-input" id="sel-currency" style="width:110px;padding:6px 8px;border-radius:6px;font-size:12px" onchange="setCurrency(this.value)">
+      <option value="BRL">BRL</option>
+      <option value="USD">USD</option>
+      <option value="EUR">EUR</option>
+    </select>
+    <label class="filter-label">Meta Mensal</label>
+    <input id="meta-input" class="form-input" style="width:140px;padding:6px 8px;border-radius:6px;font-size:12px" placeholder="0" onblur="saveMeta()" />
+  </div>
+</div>
+
+<div class="content" id="main-content"></div>
+<div id="modal-root"></div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════════════
+// JP CRM — SUPABASE LIVE
+// ════════════════════════════════════════════════════════════════════════════
+
+// ─── SUPABASE CLIENT ──────────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://swiszowpfurkegrnbwfj.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN3aXN6b3dwZnVya2Vncm5id2ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjI4MjksImV4cCI6MjA5NTczODgyOX0.gRroKE-86kI5O_8cMwtg8-l2qqWWQisxwk6GYlvz0es';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ─── CONSTANTS ────────────────────────────────────────────────────────────────
+const PROJ = {jp:'Eu Sou o JP', viaja:'JP Viaja', nattiva:'Nattiva Travel'};
+const BADGE = {jp:'badge-jp', viaja:'badge-viaja', nattiva:'badge-nattiva'};
+const AV_BG = {jp:'rgba(194,107,58,0.2)', viaja:'rgba(93,202,165,0.18)', nattiva:'rgba(133,183,235,0.18)'};
+const AV_COLOR = {jp:'#C26B3A', viaja:'#5DCAA5', nattiva:'#85B7EB'};
+const STATUSES = ['novo','contato','proposta','fechado','perdido'];
+const ST_LABEL = {novo:'Novo',contato:'Em Contato',proposta:'Proposta',fechado:'Fechado',perdido:'Perdido'};
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let tab = 'pipeline';
+let projFilter = 'all';
+
+// ─── META LOCAL (sem tabela no Supabase) ─────────────────────────────────────
+const META_KEY = 'jp_crm_meta';
+function loadMeta(){ try{ return JSON.parse(localStorage.getItem(META_KEY))||{metaMensal:0,currency:'BRL'}; }catch(e){ return {metaMensal:0,currency:'BRL'}; } }
+function persistMeta(){ localStorage.setItem(META_KEY, JSON.stringify({metaMensal:data.metaMensal,currency:data.currency})); }
+
+// ─── CACHE LOCAL (runtime) ────────────────────────────────────────────────────
+const _meta = loadMeta();
+let data = { leads:[], clientes:[], contratos:[], faturas:[], despesas:[], metaMensal:_meta.metaMensal, currency:_meta.currency };
+
+// ─── FIELD MAPPING (DB snake_case → JS camelCase) ─────────────────────────────
+const mapLead    = r => ({id:r.id, nome:r.nome, nicho:r.nicho, proj:r.proj, status:r.status, valorEstimado:r.valor_estimado?String(r.valor_estimado):'', tipo:r.tipo, followup:r.followup, obs:r.obs, contatoData:r.contato_data, clienteId:r.cliente_id});
+const mapCliente = r => ({id:r.id, nome:r.nome, empresa:r.empresa, instagram:r.instagram, proj:r.proj, status:r.status, comoConheceu:r.como_conheceu, observacao:r.observacao, leadId:r.lead_id, av:r.av, createdAt:r.created_at});
+const mapContrato= r => ({id:r.id, clienteId:r.cliente_id, valor:r.valor, recorrencia:r.recorrencia, dataInicio:r.data_inicio, vencimento:r.vencimento, status:r.status, moeda:r.moeda});
+const mapFatura  = r => ({id:r.id, clienteId:r.cliente_id, contratoId:r.contrato_id, mes:r.mes, valor:r.valor, status:r.status, dataPagamento:r.data_pagamento});
+const mapDespesa = r => ({id:r.id, item:r.item, valor:r.valor, periodo:r.periodo, categoria:r.categoria, data:r.data});
+
+// ─── TOAST ────────────────────────────────────────────────────────────────────
+function toast(msg, type='error'){
+  const el=document.createElement('div');
+  el.style.cssText=`position:fixed;bottom:24px;right:24px;z-index:9999;background:${type==='error'?'var(--red)':'var(--green)'};color:#fff;padding:12px 20px;border-radius:4px;font-size:12px;font-weight:700;letter-spacing:1px;box-shadow:0 4px 20px rgba(0,0,0,0.4);transition:opacity .3s`;
+  el.textContent=msg;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),3500);
+}
+
+// ─── LOADING ──────────────────────────────────────────────────────────────────
+function showLoading(){
+  document.getElementById('main-content').innerHTML=`<div style="text-align:center;padding:100px 0"><div style="font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--text3)">Carregando...</div></div>`;
+}
+
+// ─── INIT — carrega tudo do Supabase ─────────────────────────────────────────
+async function initData(){
+  showLoading();
+  try{
+    const [l,c,ct,f,d] = await Promise.all([
+      sb.from('leads').select('*').order('created_at',{ascending:false}),
+      sb.from('clientes').select('*').order('created_at',{ascending:false}),
+      sb.from('contratos').select('*').order('created_at',{ascending:false}),
+      sb.from('faturas').select('*'),
+      sb.from('despesas').select('*').order('data',{ascending:false}),
+    ]);
+    if(l.error) throw l.error;
+    if(c.error) throw c.error;
+    data.leads    = (l.data||[]).map(mapLead);
+    data.clientes = (c.data||[]).map(mapCliente);
+    data.contratos= (ct.data||[]).map(mapContrato);
+    data.faturas  = (f.data||[]).map(mapFatura);
+    data.despesas = (d.data||[]).map(mapDespesa);
+    render();
+  }catch(e){
+    document.getElementById('main-content').innerHTML=`<div style="text-align:center;padding:100px 0"><div style="color:var(--red);font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase">Erro ao conectar com Supabase</div><div style="color:var(--text3);font-size:11px;margin-top:10px">${e.message}</div><button class="btn" style="margin-top:20px" onclick="initData()">Tentar novamente</button></div>`;
+  }
+}
+
+// ─── HELPERS GLOBAIS ──────────────────────────────────────────────────────────
+function val(id){ const el=document.getElementById(id); return el?el.value.trim():''; }
+function modal(inner){ document.getElementById('modal-root').innerHTML=`<div class="modal-overlay" id="moverlay" onclick="if(event.target.id==='moverlay')closeModal()">${inner}</div>`; }
+function closeModal(){ document.getElementById('modal-root').innerHTML=''; }
+function getContratoAtivo(clienteId){ return (data.contratos||[]).find(ct=>ct.clienteId===clienteId&&ct.status==='Ativo'); }
+function setCurrency(c){ data.currency=c; persistMeta(); render(); }
+function saveMeta(){ const el=document.getElementById('meta-input'); if(!el) return; data.metaMensal=parseFloat(el.value.replace(',','.'))||0; persistMeta(); render(); }
+function formatCurrency(v){ if(!v&&v!==0) return '—'; return new Intl.NumberFormat(data.currency==='BRL'?'pt-BR':'en-US',{style:'currency',currency:data.currency||'BRL'}).format(v); }
+
+// ─── ROTEAMENTO ───────────────────────────────────────────────────────────────
+function switchTab(t){
+  tab=t;
+  ['pipeline','clientes','financeiro'].forEach(x=>document.getElementById('tab-'+x).classList.toggle('active',t===x));
+  const btns={pipeline:'+ Novo Lead',clientes:'+ Novo Cliente',financeiro:'+ Nova Despesa'};
+  document.getElementById('main-btn').textContent=btns[t]||'';
+  render();
+}
+function handleMainBtn(){
+  if(tab==='pipeline') openLeadForm(null);
+  else if(tab==='clientes') openClienteForm();
+  else if(tab==='financeiro') openExpenseForm();
+}
+function setFilter(el,proj){
+  projFilter=proj;
+  document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active'); render();
+}
+function filtered(arr){ return projFilter==='all'?arr:arr.filter(x=>x.proj===projFilter); }
+function render(){
+  if(tab==='pipeline') renderPipeline();
+  else if(tab==='clientes') renderClientes();
+  else if(tab==='financeiro') renderFinanceiro();
+}
+
+// (helpers definidos acima)
+
+// ─── PIPELINE ─────────────────────────────────────────────────────────────────
+function renderPipeline(){
+  // SUPABASE: await supabase.from('leads').select('*').order('created_at',{ascending:false})
+  const leads=filtered(data.leads);
+  const pipeline=leads.reduce((s,l)=>{ const n=parseFloat((l.valorEstimado||'').replace(/[^\d.,]/g,'').replace(',','.')); return s+(isNaN(n)?0:n); },0);
+  let h=`<div class="stats">
+    <div class="stat"><div class="stat-label">Total Leads</div><div class="stat-value">${leads.length}</div></div>
+    <div class="stat"><div class="stat-label">Em Proposta</div><div class="stat-value">${leads.filter(l=>l.status==='proposta').length}</div></div>
+    <div class="stat"><div class="stat-label">Fechados</div><div class="stat-value accent">${leads.filter(l=>l.status==='fechado'&&l.clienteId).length} <span style="font-size:14px;font-weight:500;color:var(--text2)">convertidos</span></div></div>
+    <div class="stat"><div class="stat-label">Pipeline Estimado</div><div class="stat-value accent">${formatCurrency(pipeline)}</div></div>
+  </div>
+  <div class="section-header"><span class="section-title">Kanban de Leads</span></div>
+  <div class="kanban">`;
+  STATUSES.forEach(st=>{
+    const cols=leads.filter(l=>l.status===st);
+    h+=`<div class="col st-${st}" ondragover="event.preventDefault()" ondrop="handleDrop(event,'${st}')">
+      <div class="col-header"><span class="col-title">${ST_LABEL[st]}</span><span class="col-count">${cols.length}</span></div>`;
+    if(!cols.length) h+=`<div class="empty-col">Vazio</div>`;
+    cols.forEach(l=>{
+      const convertido=!!l.clienteId;
+      h+=`<div class="card" draggable="true" ondragstart="event.dataTransfer.setData('text/plain',${l.id})" onclick="openLeadForm(${l.id})">
+        <div class="card-proj">
+          <span class="badge ${BADGE[l.proj]}">${PROJ[l.proj]}</span>
+          ${convertido?`<span style="margin-left:6px;font-size:8px;font-weight:800;color:var(--green);background:rgba(93,202,165,0.1);border:1px solid rgba(93,202,165,0.25);padding:2px 7px;border-radius:2px;letter-spacing:1px">✓ CLIENTE</span>`:''}
+        </div>
+        <div class="card-name">${l.nome}</div>
+        <div class="card-nicho">${l.nicho||'&nbsp;'}</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+          <div class="card-value">${l.valorEstimado||'—'}</div>
+          ${l.followup?`<div class="card-followup">↻ ${new Date(l.followup+'T00:00:00').toLocaleDateString('pt-BR')}</div>`:''}
+        </div>
+        <div class="card-footer">
+          <span class="card-date">${l.contatoData||''}</span>
+          ${st==='fechado'&&!convertido?`<button class="btn" style="font-size:8px;padding:3px 9px" onclick="event.stopPropagation();openConvertLeadForm(${l.id})">Converter →</button>`:''}
+        </div>
+      </div>`;
+    });
+    h+=`</div>`;
+  });
+  h+=`</div>`;
+  document.getElementById('main-content').innerHTML=h;
+}
+
+async function handleDrop(e,status){
+  const id=e.dataTransfer.getData('text/plain');
+  const l=data.leads.find(x=>x.id===id); if(!l) return;
+  const old=l.status; l.status=status; render();
+  const {error}=await sb.from('leads').update({status}).eq('id',id);
+  if(error){ l.status=old; render(); toast('Erro ao mover lead'); }
+}
+
+// ─── LEAD FORM ────────────────────────────────────────────────────────────────
+function openLeadForm(id){
+  // SUPABASE: await supabase.from('leads').select('*').eq('id',id).single()
+  const l=id?data.leads.find(x=>x.id===id):null;
+  const convertido=l&&!!l.clienteId;
+  modal(`<div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-divider"></div>
+    <div class="modal-title">${l?'Editar Lead':'Novo Lead'}</div>
+    ${convertido?`<div style="background:rgba(93,202,165,0.08);border:1px solid rgba(93,202,165,0.2);border-radius:4px;padding:10px 14px;margin-bottom:20px;font-size:11px;color:var(--green);font-weight:700">✓ Lead já convertido em cliente</div>`:''}
+    <div class="form-row"><label class="form-label">Nome / Empresa</label><input class="form-input" id="fn" value="${l?l.nome:''}" placeholder="Ex: Ana Martins"></div>
+    <div class="form-row"><label class="form-label">Nicho</label><input class="form-input" id="fni" value="${l?l.nicho||'':''}" placeholder="Ex: Clínica estética"></div>
+    <div class="form-row"><label class="form-label">Projeto</label><select class="form-input" id="fp">${Object.keys(PROJ).map(p=>`<option value="${p}" ${l&&l.proj===p?'selected':''}>${PROJ[p]}</option>`).join('')}</select></div>
+    <div class="form-row"><label class="form-label">Status</label><select class="form-input" id="fs">${STATUSES.map(s=>`<option value="${s}" ${l&&l.status===s?'selected':''}>${ST_LABEL[s]}</option>`).join('')}</select></div>
+    <div class="form-row"><label class="form-label">Tipo de serviço</label><select class="form-input" id="ftipo">${['Assessoria','Consultoria','GMN','Outros'].map(t=>`<option ${l&&l.tipo===t?'selected':''}>${t}</option>`).join('')}</select></div>
+    <div class="form-row"><label class="form-label">Próximo follow-up</label><input class="form-input" type="date" id="ffup" value="${l&&l.followup?l.followup:''}"></div>
+    <div class="form-row"><label class="form-label">Valor estimado</label><input class="form-input" id="fv" value="${l?l.valorEstimado||'':''}" placeholder="Ex: 3500"></div>
+    <div class="form-row"><label class="form-label">Observações</label><textarea class="form-input" id="fo">${l?l.obs||'':''}</textarea></div>
+    <div class="form-actions">
+      ${l&&!convertido?`<button class="btn btn-danger" onclick="deleteLead(${l.id})">Remover</button>`:''}
+      ${l&&l.status==='fechado'&&!convertido?`<button class="btn" style="border-color:var(--green);color:var(--green)" onclick="closeModal();openConvertLeadForm(${l.id})">Converter em Cliente →</button>`:''}
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn" onclick="${l?`updateLead(${l.id})`:'saveLead()'}">${l?'Salvar':'Adicionar'}</button>
+    </div>
+  </div>`);
+}
+
+async function saveLead(){
+  const payload={nome:val('fn')||'Sem nome',nicho:val('fni'),proj:val('fp'),status:val('fs'),valor_estimado:parseFloat(val('fv').replace(/[^\d.,]/g,'').replace(',','.'))||null,tipo:val('ftipo'),followup:val('ffup')||null,obs:val('fo'),contato_data:new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}),cliente_id:null};
+  const {data:row,error}=await sb.from('leads').insert(payload).select().single();
+  if(error){ toast('Erro ao salvar lead: '+error.message); return; }
+  data.leads.unshift(mapLead(row));
+  closeModal(); render(); toast('Lead adicionado!','success');
+}
+async function updateLead(id){
+  const payload={nome:val('fn'),nicho:val('fni'),proj:val('fp'),status:val('fs'),valor_estimado:parseFloat(val('fv').replace(/[^\d.,]/g,'').replace(',','.'))||null,tipo:val('ftipo'),followup:val('ffup')||null,obs:val('fo')};
+  const {error}=await sb.from('leads').update(payload).eq('id',id);
+  if(error){ toast('Erro ao atualizar lead'); return; }
+  const l=data.leads.find(x=>x.id===id);
+  if(l) Object.assign(l,{nome:payload.nome,nicho:payload.nicho,proj:payload.proj,status:payload.status,valorEstimado:payload.valor_estimado?String(payload.valor_estimado):'',tipo:payload.tipo,followup:payload.followup,obs:payload.obs});
+  closeModal(); render();
+}
+async function deleteLead(id){
+  if(!confirm('Remover este lead?')) return;
+  const {error}=await sb.from('leads').delete().eq('id',id);
+  if(error){ toast('Erro ao remover lead'); return; }
+  data.leads=data.leads.filter(x=>x.id!==id);
+  closeModal(); render();
+}
+
+// ─── CONVERTER LEAD → CLIENTE ─────────────────────────────────────────────────
+function openConvertLeadForm(leadId){
+  // SUPABASE: await supabase.from('leads').select('*').eq('id',leadId).single()
+  const l=data.leads.find(x=>x.id===leadId); if(!l) return;
+  const hoje=new Date().toISOString().slice(0,10);
+  modal(`<div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-divider"></div>
+    <div class="modal-title">Converter em Cliente</div>
+    <div style="background:var(--terra7);border:1px solid rgba(194,107,58,0.2);border-radius:4px;padding:10px 14px;margin-bottom:20px;font-size:11px;color:var(--terra)">
+      Lead: <strong>${l.nome}</strong> · ${PROJ[l.proj]||l.proj} · ${l.tipo||''}
+    </div>
+    <div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px">Dados do Cliente</div>
+    <div class="form-row"><label class="form-label">Nome completo</label><input class="form-input" id="c_nome" value="${l.nome}"></div>
+    <div class="form-row"><label class="form-label">Empresa</label><input class="form-input" id="c_empresa" placeholder="Nome da empresa"></div>
+    <div class="form-row"><label class="form-label">Instagram</label><input class="form-input" id="c_instagram" placeholder="@usuario"></div>
+    <div class="form-row"><label class="form-label">Como me conheceu</label><select class="form-input" id="c_conheceu">${['indicação','instagram','google','LinkedIn','Upwork','youtube','outro'].map(o=>`<option>${o}</option>`).join('')}</select></div>
+    <div class="form-row"><label class="form-label">Observação</label><textarea class="form-input" id="c_obs">${l.obs||''}</textarea></div>
+    <div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px;margin-top:8px">Contrato</div>
+    <div class="form-row"><label class="form-label">Valor mensal / contratado</label><input class="form-input" id="ct_valor" value="${l.valorEstimado?l.valorEstimado.replace(/[^\d.,]/g,''):''}" placeholder="0.00"></div>
+    <div class="form-row"><label class="form-label">Recorrência</label><select class="form-input" id="ct_recorrencia">${['Mensal','Trimestral','Anual','Pagamento Único'].map(o=>`<option>${o}</option>`).join('')}</select></div>
+    <div class="form-row"><label class="form-label">Data de início</label><input class="form-input" type="date" id="ct_inicio" value="${hoje}"></div>
+    <div class="form-row"><label class="form-label">Vencimento do contrato</label><input class="form-input" type="date" id="ct_vencimento"></div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn" style="border-color:var(--green);color:var(--green);background:rgba(93,202,165,0.08)" onclick="convertLead(${leadId})">✓ Confirmar Conversão</button>
+    </div>
+  </div>`);
+}
+
+async function convertLead(leadId){
+  const l=data.leads.find(x=>x.id===leadId); if(!l) return;
+  const nome=val('c_nome')||l.nome;
+  const av=nome.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+  const valor=parseFloat((val('ct_valor')||'0').replace(',','.'))||0;
+
+  const {data:cRow,error:cErr}=await sb.from('clientes').insert({nome,empresa:val('c_empresa'),instagram:val('c_instagram'),proj:l.proj,status:'Ativo',como_conheceu:val('c_conheceu'),observacao:val('c_obs'),lead_id:leadId,av}).select().single();
+  if(cErr){ toast('Erro ao criar cliente: '+cErr.message); return; }
+
+  const {data:ctRow,error:ctErr}=await sb.from('contratos').insert({cliente_id:cRow.id,valor,recorrencia:val('ct_recorrencia')||'Mensal',data_inicio:val('ct_inicio')||new Date().toISOString().slice(0,10),vencimento:val('ct_vencimento')||null,status:'Ativo',moeda:data.currency||'BRL'}).select().single();
+  if(ctErr){ toast('Erro ao criar contrato: '+ctErr.message); return; }
+
+  await sb.from('leads').update({cliente_id:cRow.id}).eq('id',leadId);
+
+  data.clientes.unshift(mapCliente(cRow));
+  data.contratos.push(mapContrato(ctRow));
+  l.clienteId=cRow.id;
+
+  closeModal(); switchTab('clientes');
+  toast('Lead convertido em cliente!','success');
+}
+
+// ─── CLIENTES ─────────────────────────────────────────────────────────────────
+function renderClientes(){
+  // SUPABASE: await supabase.from('clientes').select('*,contratos(*),leads(nome)').order('created_at',{ascending:false})
+  const clientes=filtered(data.clientes);
+  const ativos=clientes.filter(c=>c.status==='Ativo').length;
+  let h=`<div class="section-header"><span class="section-title">Clientes — ${ativos} ativo${ativos!==1?'s':''} / ${clientes.length} total</span></div>`;
+  if(!clientes.length){
+    h+=`<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Nenhum cliente. Converta um lead ou adicione manualmente.</div></div>`;
+  } else {
+    h+=`<div class="clients-grid">`;
+    clientes.forEach(c=>{
+      const ct=getContratoAtivo(c.id);
+      const lead=c.leadId?data.leads.find(l=>l.id===c.leadId):null;
+      const recCor=ct?((ct.recorrencia||'').toLowerCase().includes('mensal')?'var(--green)':(ct.recorrencia||'').toLowerCase().includes('único')?'var(--amber)':'var(--blue)'):'var(--text3)';
+      h+=`<div class="client-card">
+        <div class="client-header">
+          <div class="avatar" style="background:${AV_BG[c.proj]};color:${AV_COLOR[c.proj]}">${c.av||c.nome.slice(0,2).toUpperCase()}</div>
+          <div style="flex:1;min-width:0">
+            <div class="client-name">${c.nome}</div>
+            <div class="client-sub">
+              <span class="badge ${BADGE[c.proj]}">${PROJ[c.proj]}</span>
+              ${c.empresa?`<span>${c.empresa}</span>`:''}
+              ${lead?`<span style="font-size:8px;color:var(--terra);background:var(--terra7);border:1px solid rgba(194,107,58,0.2);padding:1px 6px;border-radius:2px">via pipeline</span>`:''}
+            </div>
+          </div>
+          <button class="btn btn-ghost" style="font-size:9px;padding:4px 10px" onclick="openClienteEdit(${c.id})">Editar</button>
+        </div>
+        ${ct
+          ?`<div style="background:var(--bg3);border-bottom:1px solid var(--border);padding:14px 22px;display:flex;gap:28px;align-items:center;flex-wrap:wrap">
+              <div><div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Contrato</div>
+                <div style="font-size:22px;font-weight:900;letter-spacing:-0.5px;color:var(--terra)">${formatCurrency(ct.valor)}</div></div>
+              <div><div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Recorrência</div>
+                <span style="font-size:9px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:${recCor};border:1px solid ${recCor}44;padding:2px 8px;border-radius:2px">${ct.recorrencia}</span></div>
+              <div><div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Início</div>
+                <div style="font-size:12px;color:var(--text2)">${ct.dataInicio||'—'}</div></div>
+              <div><div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Vencimento</div>
+                <div style="font-size:12px;color:var(--text2)">${ct.vencimento||'—'}</div></div>
+            </div>`
+          :`<div style="background:rgba(239,159,39,0.05);border-bottom:1px solid rgba(239,159,39,0.15);padding:10px 22px;font-size:11px;color:var(--amber);font-weight:700">
+              ⚠ Sem contrato ativo —
+              <button onclick="openAddContratoForm(${c.id})" style="background:none;border:none;color:var(--amber);text-decoration:underline;cursor:pointer;font-family:inherit;font-size:11px;font-weight:700;padding:0">Adicionar contrato</button>
+            </div>`}
+        <div class="client-body">
+          <div style="display:flex;gap:16px;flex-wrap:wrap">
+            <div><strong>Status:</strong> <span style="color:${c.status==='Ativo'?'var(--green)':'var(--red)'}">${c.status}</span></div>
+            <div><strong>Instagram:</strong> ${c.instagram||'—'}</div>
+            <div><strong>Origem:</strong> ${c.comoConheceu||'—'}</div>
+          </div>
+          ${c.observacao?`<div style="margin-top:8px"><strong>Obs:</strong> ${c.observacao}</div>`:''}
+        </div>
+      </div>`;
+    });
+    h+=`</div>`;
+  }
+  document.getElementById('main-content').innerHTML=h;
+}
+
+function openClienteForm(){
+  const hoje=new Date().toISOString().slice(0,10);
+  modal(`<div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-divider"></div>
+    <div class="modal-title">Novo Cliente</div>
+    <div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px">Dados do Cliente</div>
+    <div class="form-row"><label class="form-label">Nome</label><input class="form-input" id="c_nome" placeholder="Ex: João Silva"></div>
+    <div class="form-row"><label class="form-label">Empresa</label><input class="form-input" id="c_empresa"></div>
+    <div class="form-row"><label class="form-label">Instagram</label><input class="form-input" id="c_instagram" placeholder="@usuario"></div>
+    <div class="form-row"><label class="form-label">Projeto</label><select class="form-input" id="c_proj">${Object.keys(PROJ).map(p=>`<option value="${p}">${PROJ[p]}</option>`).join('')}</select></div>
+    <div class="form-row"><label class="form-label">Como me conheceu</label><select class="form-input" id="c_conheceu">${['indicação','instagram','google','LinkedIn','Upwork','youtube','outro'].map(o=>`<option>${o}</option>`).join('')}</select></div>
+    <div class="form-row"><label class="form-label">Observação</label><textarea class="form-input" id="c_obs"></textarea></div>
+    <div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px;margin-top:8px">Contrato</div>
+    <div class="form-row"><label class="form-label">Valor</label><input class="form-input" id="ct_valor" placeholder="0.00"></div>
+    <div class="form-row"><label class="form-label">Recorrência</label><select class="form-input" id="ct_recorrencia">${['Mensal','Trimestral','Anual','Pagamento Único'].map(o=>`<option>${o}</option>`).join('')}</select></div>
+    <div class="form-row"><label class="form-label">Data de início</label><input class="form-input" type="date" id="ct_inicio" value="${hoje}"></div>
+    <div class="form-row"><label class="form-label">Vencimento</label><input class="form-input" type="date" id="ct_vencimento"></div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn" onclick="saveCliente()">Adicionar</button>
+    </div>
+  </div>`);
+}
+
+async function saveCliente(){
+  const nome=val('c_nome')||'Sem nome';
+  const av=nome.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+  const valor=parseFloat((val('ct_valor')||'0').replace(',','.'))||0;
+
+  const {data:cRow,error:cErr}=await sb.from('clientes').insert({nome,empresa:val('c_empresa'),instagram:val('c_instagram'),proj:val('c_proj')||'jp',status:'Ativo',como_conheceu:val('c_conheceu'),observacao:val('c_obs'),lead_id:null,av}).select().single();
+  if(cErr){ toast('Erro ao salvar cliente: '+cErr.message); return; }
+  data.clientes.unshift(mapCliente(cRow));
+
+  if(valor>0){
+    const {data:ctRow,error:ctErr}=await sb.from('contratos').insert({cliente_id:cRow.id,valor,recorrencia:val('ct_recorrencia')||'Mensal',data_inicio:val('ct_inicio')||new Date().toISOString().slice(0,10),vencimento:val('ct_vencimento')||null,status:'Ativo',moeda:data.currency||'BRL'}).select().single();
+    if(!ctErr) data.contratos.push(mapContrato(ctRow));
+  }
+  closeModal(); render(); toast('Cliente adicionado!','success');
+}
+
+function openClienteEdit(id){
+  // SUPABASE: await supabase.from('clientes').select('*,contratos(*)').eq('id',id).single()
+  const c=data.clientes.find(x=>x.id===id); if(!c) return;
+  const ct=getContratoAtivo(id);
+  modal(`<div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-divider"></div>
+    <div class="modal-title">Editar Cliente</div>
+    <div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px">Dados do Cliente</div>
+    <div class="form-row"><label class="form-label">Nome</label><input class="form-input" id="c_nome" value="${c.nome}"></div>
+    <div class="form-row"><label class="form-label">Empresa</label><input class="form-input" id="c_empresa" value="${c.empresa||''}"></div>
+    <div class="form-row"><label class="form-label">Instagram</label><input class="form-input" id="c_instagram" value="${c.instagram||''}"></div>
+    <div class="form-row"><label class="form-label">Status</label><select class="form-input" id="c_status"><option ${c.status==='Ativo'?'selected':''}>Ativo</option><option ${c.status==='Inativo'?'selected':''}>Inativo</option></select></div>
+    <div class="form-row"><label class="form-label">Projeto</label><select class="form-input" id="c_proj">${Object.keys(PROJ).map(p=>`<option value="${p}" ${c.proj===p?'selected':''}>${PROJ[p]}</option>`).join('')}</select></div>
+    <div class="form-row"><label class="form-label">Como me conheceu</label><select class="form-input" id="c_conheceu">${['indicação','instagram','google','LinkedIn','Upwork','youtube','outro'].map(o=>`<option ${c.comoConheceu===o?'selected':''}>${o}</option>`).join('')}</select></div>
+    <div class="form-row"><label class="form-label">Observação</label><textarea class="form-input" id="c_obs">${c.observacao||''}</textarea></div>
+    <div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px;margin-top:8px">Contrato Ativo</div>
+    <div class="form-row"><label class="form-label">Valor</label><input class="form-input" id="ct_valor" value="${ct?ct.valor:''}" placeholder="0.00"></div>
+    <div class="form-row"><label class="form-label">Recorrência</label><select class="form-input" id="ct_recorrencia">${['Mensal','Trimestral','Anual','Pagamento Único'].map(o=>`<option ${ct&&ct.recorrencia===o?'selected':''}>${o}</option>`).join('')}</select></div>
+    <div class="form-row"><label class="form-label">Data de início</label><input class="form-input" type="date" id="ct_inicio" value="${ct?ct.dataInicio:''}"></div>
+    <div class="form-row"><label class="form-label">Vencimento</label><input class="form-input" type="date" id="ct_vencimento" value="${ct?ct.vencimento:''}"></div>
+    <div class="form-actions">
+      <button class="btn btn-danger" onclick="deleteCliente(${id})">Remover</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn" onclick="updateCliente(${id})">Salvar</button>
+    </div>
+  </div>`);
+}
+
+async function updateCliente(id){
+  const c=data.clientes.find(x=>x.id===id); if(!c) return;
+  const nome=val('c_nome')||c.nome;
+  const cPayload={nome,empresa:val('c_empresa'),instagram:val('c_instagram'),status:val('c_status')||c.status,proj:val('c_proj')||c.proj,como_conheceu:val('c_conheceu')||c.comoConheceu,observacao:val('c_obs'),av:nome.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase()};
+  const {error:cErr}=await sb.from('clientes').update(cPayload).eq('id',id);
+  if(cErr){ toast('Erro ao atualizar cliente'); return; }
+  Object.assign(c,{nome:cPayload.nome,empresa:cPayload.empresa,instagram:cPayload.instagram,status:cPayload.status,proj:cPayload.proj,comoConheceu:cPayload.como_conheceu,observacao:cPayload.observacao,av:cPayload.av});
+
+  const valor=parseFloat((val('ct_valor')||'0').replace(',','.'))||0;
+  let ct=getContratoAtivo(id);
+  if(ct){
+    const ctP={valor,recorrencia:val('ct_recorrencia')||ct.recorrencia,data_inicio:val('ct_inicio')||ct.dataInicio,vencimento:val('ct_vencimento')||null};
+    await sb.from('contratos').update(ctP).eq('id',ct.id);
+    Object.assign(ct,{valor,recorrencia:ctP.recorrencia,dataInicio:ctP.data_inicio,vencimento:ctP.vencimento});
+  } else if(valor>0){
+    const {data:ctRow}=await sb.from('contratos').insert({cliente_id:id,valor,recorrencia:val('ct_recorrencia')||'Mensal',data_inicio:val('ct_inicio'),vencimento:val('ct_vencimento')||null,status:'Ativo',moeda:data.currency||'BRL'}).select().single();
+    if(ctRow) data.contratos.push(mapContrato(ctRow));
+  }
+  closeModal(); render();
+}
+
+async function deleteCliente(id){
+  if(!confirm('Remover cliente, contratos e faturas vinculados?')) return;
+  const {error}=await sb.from('clientes').delete().eq('id',id); // cascade via FK
+  if(error){ toast('Erro ao remover cliente'); return; }
+  data.clientes=data.clientes.filter(x=>x.id!==id);
+  data.contratos=data.contratos.filter(x=>x.clienteId!==id);
+  data.faturas=data.faturas.filter(x=>x.clienteId!==id);
+  const lead=data.leads.find(l=>l.clienteId===id); if(lead) lead.clienteId=null;
+  closeModal(); render();
+}
+
+function openAddContratoForm(clienteId){
+  const hoje=new Date().toISOString().slice(0,10);
+  modal(`<div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-divider"></div>
+    <div class="modal-title">Novo Contrato</div>
+    <div class="form-row"><label class="form-label">Valor</label><input class="form-input" id="ct_valor" placeholder="0.00"></div>
+    <div class="form-row"><label class="form-label">Recorrência</label><select class="form-input" id="ct_recorrencia">${['Mensal','Trimestral','Anual','Pagamento Único'].map(o=>`<option>${o}</option>`).join('')}</select></div>
+    <div class="form-row"><label class="form-label">Data de início</label><input class="form-input" type="date" id="ct_inicio" value="${hoje}"></div>
+    <div class="form-row"><label class="form-label">Vencimento</label><input class="form-input" type="date" id="ct_vencimento"></div>
+    <div class="form-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn" onclick="saveContrato('${clienteId}')">Salvar</button></div>
+  </div>`);
+}
+async function saveContrato(clienteId){
+  const valor=parseFloat((val('ct_valor')||'0').replace(',','.'))||0;
+  if(!valor){ toast('Informe o valor'); return; }
+  const {data:ctRow,error}=await sb.from('contratos').insert({cliente_id:clienteId,valor,recorrencia:val('ct_recorrencia')||'Mensal',data_inicio:val('ct_inicio'),vencimento:val('ct_vencimento')||null,status:'Ativo',moeda:data.currency||'BRL'}).select().single();
+  if(error){ toast('Erro ao salvar contrato'); return; }
+  data.contratos.push(mapContrato(ctRow));
+  closeModal(); render(); toast('Contrato adicionado!','success');
+}
+
+/* Financeiro helpers */
+function setCurrency(c){ data.currency = c; saveData(data); render(); }
+function saveMeta(){ const el = document.getElementById('meta-input'); if(!el) return; const v = parseFloat(el.value.toString().replace(',','.'))||0; data.metaMensal = v; saveData(data); render(); }
+function formatCurrency(v){ if(!v && v!==0) return '-'; const locale = data.currency==='BRL'?'pt-BR':'en-US'; return new Intl.NumberFormat(locale,{style:'currency',currency:data.currency||'BRL'}).format(v); }
+
+// ─── PERÍODO SELECIONADO ────────────────────────────────────────────────────
+let finYear = new Date().getFullYear();
+let finMonth = new Date().getMonth() + 1;
+function setFinPeriodo(y, m){ finYear=parseInt(y); finMonth=parseInt(m); render(); }
+function finMesStr(){ return `${finYear}-${String(finMonth).padStart(2,'0')}`; }
+const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+// ─── FATURAS (SUPABASE-READY) ───────────────────────────────────────────────
+// SUPABASE TABLE: faturas { id, clienteId, mes:'YYYY-MM', valor, status:'pago'|'pendente'|'vencido', dataPagamento }
+function getFatura(clienteId, mes){
+  // SUPABASE: await supabase.from('faturas').select('*').eq('cliente_id',clienteId).eq('mes',mes).maybeSingle()
+  return (data.faturas||[]).find(f=>f.clienteId===clienteId && f.mes===mes);
+}
+async function marcarPago(clienteId){
+  const mes=finMesStr();
+  const ct=getContratoAtivo(clienteId); if(!ct) return;
+  const existing=getFatura(clienteId,mes);
+  const payload={cliente_id:clienteId,contrato_id:ct.id,mes,valor:ct.valor,status:'pago',data_pagamento:new Date().toISOString().slice(0,10)};
+  const {data:row,error}=await sb.from('faturas').upsert(payload,{onConflict:'cliente_id,mes'}).select().single();
+  if(error){ toast('Erro ao registrar pagamento'); return; }
+  if(existing) Object.assign(existing,mapFatura(row));
+  else data.faturas.push(mapFatura(row));
+  render();
+}
+async function marcarPendente(clienteId){
+  const fat=getFatura(clienteId,finMesStr()); if(!fat) return;
+  const {error}=await sb.from('faturas').update({status:'pendente',data_pagamento:null}).eq('id',fat.id);
+  if(error){ toast('Erro ao atualizar status'); return; }
+  fat.status='pendente'; fat.dataPagamento=null; render();
+}
+async function marcarVencido(clienteId){
+  const mes=finMesStr();
+  const ct=getContratoAtivo(clienteId); if(!ct) return;
+  const existing=getFatura(clienteId,mes);
+  const payload={cliente_id:clienteId,contrato_id:ct.id,mes,valor:ct.valor,status:'vencido',data_pagamento:null};
+  const {data:row,error}=await sb.from('faturas').upsert(payload,{onConflict:'cliente_id,mes'}).select().single();
+  if(error){ toast('Erro ao marcar vencimento'); return; }
+  if(existing) Object.assign(existing,mapFatura(row));
+  else data.faturas.push(mapFatura(row));
+  render();
+}
+
+function renderFinanceiro(){
+  const mes = finMesStr();
+  const anoStr = String(finYear);
+  const cliAll = filtered(data.clientes || []).filter(c=>(c.status||'').toLowerCase()==='ativo'&&getContratoAtivo(c.id));
+  const cliList = cliAll; // alias legível
+
+  const ctValor = c => (getContratoAtivo(c.id)||{}).valor||0;
+
+  // ── Mês selecionado ───────────────────────────────────────────────────────
+  const recebido  = cliList.filter(c=>{ const f=getFatura(c.id,mes); return f&&f.status==='pago'; });
+  const vencido   = cliList.filter(c=>{ const f=getFatura(c.id,mes); return f&&f.status==='vencido'; });
+  const aReceber  = cliList.filter(c=>{ const f=getFatura(c.id,mes); return !f||f.status==='pendente'; });
+  const totalRecebido = recebido.reduce((s,c)=>s+ctValor(c),0);
+  const totalVencido  = vencido.reduce((s,c)=>s+ctValor(c),0);
+  const totalAReceber = aReceber.reduce((s,c)=>s+ctValor(c),0);
+
+  const despesasMes = (data.despesas||[]).reduce((s,dep)=>{
+    if(dep.periodo==='Mensal') return s+(dep.valor||0);
+    if(dep.periodo==='Único'&&dep.data&&dep.data.startsWith(mes)) return s+(dep.valor||0);
+    return s;
+  },0);
+  const saldoMes = totalRecebido - despesasMes;
+
+  // ── Acumulado anual ───────────────────────────────────────────────────────
+  const receitaAnual = (data.faturas||[]).filter(f=>f.status==='pago'&&f.mes&&f.mes.startsWith(anoStr))
+    .reduce((s,f)=>s+(f.valor||0),0);
+  const despesasAnual = (data.despesas||[]).reduce((s,dep)=>{
+    if(dep.periodo==='Mensal') return s+(dep.valor||0)*12;
+    if(dep.periodo==='Único'&&dep.data&&dep.data.startsWith(anoStr)) return s+(dep.valor||0);
+    return s;
+  },0);
+  const saldoAnual = receitaAnual - despesasAnual;
+  const mesesComFatura = [...new Set((data.faturas||[]).filter(f=>f.status==='pago'&&f.mes&&f.mes.startsWith(anoStr)).map(f=>f.mes))].length;
+
+  // ── Meta ──────────────────────────────────────────────────────────────────
+  const meta  = data.metaMensal||0;
+  const metaAnual = meta * 12;
+  const metaAtingida = meta>0 && totalRecebido>=meta;
+  const metaPct = meta>0 ? Math.min(Math.round((totalRecebido/meta)*100),100) : 0;
+  const metaAnualPct = metaAnual>0 ? Math.min(Math.round((receitaAnual/metaAnual)*100),100) : 0;
+  const metaCor = meta===0?'var(--text2)':metaAtingida?'var(--green)':'var(--red)';
+
+  // ── Seletor de período ────────────────────────────────────────────────────
+  let periodoOpts = '';
+  for(let y=new Date().getFullYear()+1; y>=2024; y--){
+    for(let m=12; m>=1; m--){
+      const v=`${y}-${String(m).padStart(2,'0')}`;
+      periodoOpts+=`<option value="${v}" ${v===mes?'selected':''}>${MESES[m-1]} ${y}</option>`;
+    }
+  }
+
+  // ── Formata input de valor ────────────────────────────────────────────────
+  // formatCurrency já usa pt-BR (vírgula decimal)
+
+  const label = (txt) => `<div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:10px"><span style="width:18px;height:1px;background:var(--terra);display:inline-block"></span>${txt}</div>`;
+
+  let h = `
+  <!-- SELETOR -->
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px">
+    <span style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3)">Período</span>
+    <select onchange="setFinPeriodo(this.value.split('-')[0],this.value.split('-')[1])" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);font-family:'Raleway',sans-serif;font-size:12px;font-weight:700;padding:7px 14px;border-radius:4px;outline:none;cursor:pointer">${periodoOpts}</select>
+    <span style="font-size:11px;color:var(--text3)">${MESES[finMonth-1]} ${finYear}</span>
+  </div>
+
+  <!-- ACUMULADO ANUAL -->
+  ${label('Balanço Anual — '+finYear)}
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:28px">
+    <div style="background:var(--bg2);padding:20px 22px;border-top:2px solid var(--green)">
+      <div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Receita Recebida</div>
+      <div style="font-size:28px;font-weight:900;letter-spacing:-1px;color:var(--green);margin-bottom:6px">${formatCurrency(receitaAnual)}</div>
+      <div style="font-size:10px;color:var(--text3)">${mesesComFatura} ${mesesComFatura===1?'mês':'meses'} com recebimento${metaAnual>0?` · ${metaAnualPct}% da meta anual`:''}</div>
+    </div>
+    <div style="background:var(--bg2);padding:20px 22px;border-top:2px solid var(--red)">
+      <div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Despesas Anuais</div>
+      <div style="font-size:28px;font-weight:900;letter-spacing:-1px;color:var(--red);margin-bottom:6px">${formatCurrency(despesasAnual)}</div>
+      <div style="font-size:10px;color:var(--text3)">mensais × 12 + únicas do ano</div>
+    </div>
+    <div style="background:var(--bg2);padding:20px 22px;border-top:2px solid ${saldoAnual<0?'var(--red)':'var(--terra)'}">
+      <div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Saldo Anual</div>
+      <div style="font-size:28px;font-weight:900;letter-spacing:-1px;color:${saldoAnual<0?'var(--red)':'var(--terra)'};margin-bottom:6px">${formatCurrency(saldoAnual)}</div>
+      <div style="font-size:10px;color:var(--text3)">Receita − Despesas acumuladas</div>
+    </div>
+  </div>
+
+  <!-- META MENSAL -->
+  ${label('Meta Mensal — '+MESES[finMonth-1]+' '+finYear)}
+  <div style="background:var(--bg2);border:1px solid ${meta===0?'var(--border)':metaAtingida?'rgba(93,202,165,0.25)':'rgba(226,75,74,0.25)'};border-radius:6px;padding:22px 28px;margin-bottom:20px;position:relative;overflow:hidden">
+    <div style="position:absolute;top:0;left:0;bottom:0;width:${metaPct}%;background:${metaAtingida?'rgba(93,202,165,0.04)':'rgba(226,75,74,0.04)'};pointer-events:none"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;position:relative">
+      <div>
+        <div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Meta do Mês</div>
+        <div style="font-size:30px;font-weight:900;letter-spacing:-1px;color:${metaCor};line-height:1">${formatCurrency(meta)}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${metaCor};margin-bottom:4px">${meta===0?'Meta não definida':metaAtingida?'✓ Meta atingida':'✗ Abaixo da meta'}</div>
+        <div style="font-size:26px;font-weight:900;color:${metaCor}">${meta>0?metaPct+'%':'—'}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px">${meta>0?formatCurrency(totalRecebido)+' recebido no mês':''}</div>
+      </div>
+    </div>
+    ${meta>0?`<div style="margin-top:14px;height:3px;background:var(--border);border-radius:2px;overflow:hidden"><div style="height:100%;width:${metaPct}%;background:${metaAtingida?'var(--green)':'var(--red)'};border-radius:2px"></div></div>`:''}
+  </div>
+
+  <!-- BALANÇO DO MÊS -->
+  ${label('Balanço do Mês — '+MESES[finMonth-1]+' '+finYear)}
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:32px">
+    <div style="background:var(--bg2);padding:22px 20px;border-top:2px solid var(--green)">
+      <div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Recebido</div>
+      <div style="font-size:26px;font-weight:900;letter-spacing:-1px;color:var(--green);margin-bottom:8px">${formatCurrency(totalRecebido)}</div>
+      <div style="font-size:10px;color:var(--text3)">${recebido.length} cliente${recebido.length!==1?'s':''}</div>
+    </div>
+    <div style="background:var(--bg2);padding:22px 20px;border-top:2px solid var(--blue)">
+      <div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">A Receber</div>
+      <div style="font-size:26px;font-weight:900;letter-spacing:-1px;color:var(--blue);margin-bottom:8px">${formatCurrency(totalAReceber)}</div>
+      <div style="font-size:10px;color:var(--text3)">${aReceber.length} cliente${aReceber.length!==1?'s':''}</div>
+    </div>
+    <div style="background:var(--bg2);padding:22px 20px;border-top:2px solid var(--red)">
+      <div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Vencido</div>
+      <div style="font-size:26px;font-weight:900;letter-spacing:-1px;color:var(--red);margin-bottom:8px">${formatCurrency(totalVencido)}</div>
+      <div style="font-size:10px;color:var(--text3)">${vencido.length} cliente${vencido.length!==1?'s':''}</div>
+    </div>
+    <div style="background:var(--bg2);padding:22px 20px;border-top:2px solid ${saldoMes<0?'var(--red)':'var(--terra)'}">
+      <div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Saldo do Mês</div>
+      <div style="font-size:26px;font-weight:900;letter-spacing:-1px;color:${saldoMes<0?'var(--red)':'var(--terra)'};margin-bottom:8px">${formatCurrency(saldoMes)}</div>
+      <div style="font-size:10px;color:var(--text3)">Recebido − Despesas</div>
+    </div>
+  </div>`;
+
+  // ── COBRANÇAS POR CLIENTE ─────────────────────────────────────────────────
+  h+=label('Cobranças — '+MESES[finMonth-1]+' '+finYear);
+  if(cliList.length){
+    const stCfg = {
+      pago:    {label:'Recebido',  cor:'var(--green)', bg:'rgba(93,202,165,0.08)',  brd:'rgba(93,202,165,0.2)'},
+      pendente:{label:'Pendente',  cor:'var(--blue)',  bg:'rgba(133,183,235,0.08)', brd:'rgba(133,183,235,0.2)'},
+      vencido: {label:'Vencido',   cor:'var(--red)',   bg:'rgba(226,75,74,0.08)',   brd:'rgba(226,75,74,0.2)'},
+    };
+    h+=`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:32px">
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr style="background:var(--bg3)">
+          <th style="padding:13px 18px;text-align:left;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Cliente</th>
+          <th style="padding:13px 18px;text-align:left;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Empresa</th>
+          <th style="padding:13px 18px;text-align:left;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Valor</th>
+          <th style="padding:13px 18px;text-align:left;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Recorrência</th>
+          <th style="padding:13px 18px;text-align:left;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Status</th>
+          <th style="padding:13px 18px;text-align:left;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Data Pag.</th>
+          <th style="padding:13px 18px;border-bottom:1px solid var(--border)"></th>
+        </tr></thead><tbody>`;
+    cliList.forEach(c=>{
+      const fat = getFatura(c.id, mes);
+      const stKey = fat ? fat.status : 'pendente';
+      const st = stCfg[stKey]||stCfg.pendente;
+      const recBadge = (c.recorrencia||'').toLowerCase().includes('mensal')?'var(--green)':(c.recorrencia||'').toLowerCase().includes('único')||(c.recorrencia||'').toLowerCase().includes('unico')?'var(--amber)':'var(--blue)';
+      const acoes = stKey==='pago'
+        ? `<button class="btn btn-ghost" style="font-size:9px;padding:4px 10px" onclick="marcarPendente('${c.id}')">Desfazer</button>`
+        : `<button class="btn" style="font-size:9px;padding:4px 10px;border-color:var(--green);color:var(--green)" onclick="marcarPago('${c.id}')">Marcar Pago</button>
+           <button class="btn btn-danger" style="font-size:9px;padding:4px 10px;margin-left:4px" onclick="marcarVencido('${c.id}')">Vencido</button>`;
+      h+=`<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:15px 18px;font-size:13px;font-weight:700;color:var(--text)">${c.nome}</td>
+        <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${c.empresa||'—'}</td>
+        <td style="padding:15px 18px;font-size:14px;font-weight:800;color:var(--terra)">${formatCurrency(ctValor(c))}</td>
+        <td style="padding:15px 18px"><span style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${recBadge};border:1px solid ${recBadge}44;padding:2px 8px;border-radius:2px">${c.recorrencia||'—'}</span></td>
+        <td style="padding:15px 18px"><span style="font-size:9px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:${st.cor};background:${st.bg};border:1px solid ${st.brd};padding:3px 10px;border-radius:2px">${st.label}</span></td>
+        <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${fat&&fat.dataPagamento?fat.dataPagamento:'—'}</td>
+        <td style="padding:15px 18px;text-align:right;white-space:nowrap">${acoes}</td>
+      </tr>`;
+    });
+    h+=`</tbody></table></div>`;
+  } else {
+    h+=`<div class="empty-state" style="margin-bottom:32px"><div class="empty-icon">📄</div><div class="empty-text">Nenhum cliente ativo</div></div>`;
+  }
+
+  // ── DESPESAS ──────────────────────────────────────────────────────────────
+  h+=label('Despesas');
+  if((data.despesas||[]).length){
+    h+=`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;overflow:hidden">
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr style="background:var(--bg3)">
+          <th style="padding:13px 18px;text-align:left;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Item</th>
+          <th style="padding:13px 18px;text-align:left;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Valor</th>
+          <th style="padding:13px 18px;text-align:left;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Período</th>
+          <th style="padding:13px 18px;text-align:left;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Categoria</th>
+          <th style="padding:13px 18px;text-align:left;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Data</th>
+          <th style="padding:13px 18px;border-bottom:1px solid var(--border)"></th>
+        </tr></thead><tbody>`+
+      (data.despesas||[]).map(dep=>`<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:15px 18px;font-size:13px;font-weight:700;color:var(--text)">${dep.item}</td>
+        <td style="padding:15px 18px;font-size:14px;font-weight:800;color:var(--red)">${formatCurrency(dep.valor)}</td>
+        <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${dep.periodo}</td>
+        <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${dep.categoria||'—'}</td>
+        <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${dep.data||'—'}</td>
+        <td style="padding:15px 18px;text-align:right"><button class="btn btn-danger" style="font-size:9px;padding:4px 11px" onclick="deleteExpense(${dep.id})">Remover</button></td>
+      </tr>`).join('')+
+      `</tbody></table></div>`;
+  } else {
+    h+=`<div class="empty-state"><div class="empty-icon">💸</div><div class="empty-text">Nenhuma despesa registrada</div></div>`;
+  }
+
+  document.getElementById('main-content').innerHTML = h;
+}
+
+function openExpenseForm(){
+  modal(`<div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-divider"></div>
+    <div class="modal-title">Nova Despesa</div>
+    <div class="form-row"><label class="form-label">Item</label><input class="form-input" id="exp-item"></div>
+    <div class="form-row"><label class="form-label">Valor</label><input class="form-input" id="exp-valor" placeholder="0.00"></div>
+    <div class="form-row"><label class="form-label">Período</label><select class="form-input" id="exp-periodo"><option>Mensal</option><option>Único</option></select></div>
+    <div class="form-row"><label class="form-label">Categoria</label><input class="form-input" id="exp-cat"></div>
+    <div class="form-row"><label class="form-label">Data</label><input class="form-input" type="date" id="exp-data"></div>
+    <div class="form-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn" onclick="saveExpense()">Adicionar</button></div>
+  </div>`);
+}
+
+
+async function saveExpense(){
+  const payload={item:val('exp-item')||'Despesa',valor:parseFloat((val('exp-valor')||'0').replace(',','.'))||0,periodo:val('exp-periodo')||'Mensal',categoria:val('exp-cat')||'',data:val('exp-data')||new Date().toISOString().slice(0,10)};
+  const {data:row,error}=await sb.from('despesas').insert(payload).select().single();
+  if(error){ toast('Erro ao salvar despesa'); return; }
+  data.despesas.unshift(mapDespesa(row));
+  closeModal(); render();
+}
+async function deleteExpense(id){
+  if(!confirm('Remover esta despesa?')) return;
+  const {error}=await sb.from('despesas').delete().eq('id',id);
+  if(error){ toast('Erro ao remover despesa'); return; }
+  data.despesas=data.despesas.filter(x=>x.id!==id); render();
+}
+
+// ─── BOOT ─────────────────────────────────────────────────────────────────────
+const sc=document.getElementById('sel-currency'); if(sc) sc.value=(data.currency||'BRL');
+const mi=document.getElementById('meta-input'); if(mi) mi.value=(data.metaMensal||'');
+
+initData(); // carrega do Supabase e renderiza
+</script>
+</body>
+</html>

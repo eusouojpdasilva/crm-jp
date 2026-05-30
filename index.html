@@ -337,7 +337,8 @@ textarea.form-input{resize:vertical;min-height:80px}
       <option value="EUR">EUR</option>
     </select>
     <label class="filter-label">Meta Mensal</label>
-    <input id="meta-input" class="form-input" style="width:140px;padding:6px 8px;border-radius:6px;font-size:12px" placeholder="0" onblur="saveMeta()" />
+    <input id="meta-input" class="form-input" style="width:140px;padding:6px 8px;border-radius:6px;font-size:12px" placeholder="0" onblur="saveMeta()" onkeydown="if(event.key==='Enter'){saveMeta();this.blur()}" />
+    <button class="btn" style="padding:6px 12px;font-size:10px" onclick="saveMeta()">OK</button>
   </div>
 </div>
 
@@ -787,7 +788,6 @@ async function saveContrato(clienteId){
 
 /* Financeiro helpers */
 function setCurrency(c){ data.currency = c; saveData(data); render(); }
-function saveMeta(){ const el = document.getElementById('meta-input'); if(!el) return; const v = parseFloat(el.value.toString().replace(',','.'))||0; data.metaMensal = v; saveData(data); render(); }
 function formatCurrency(v){ if(!v && v!==0) return '-'; const locale = data.currency==='BRL'?'pt-BR':'en-US'; return new Intl.NumberFormat(locale,{style:'currency',currency:data.currency||'BRL'}).format(v); }
 
 // ─── PERÍODO SELECIONADO ────────────────────────────────────────────────────

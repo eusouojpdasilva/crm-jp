@@ -1059,6 +1059,38 @@ async function deleteExpense(id){
   data.despesas=data.despesas.filter(x=>x.id!==id); render();
 }
 
+// ─── NAVEGAÇÃO POR ENTER NOS FORMULÁRIOS ─────────────────────────────────────
+// Captura Enter em qualquer .form-input dentro do modal:
+//   - textarea → ignora (Enter deve criar nova linha)
+//   - campo normal → pula para o próximo input/select
+//   - último campo → clica no botão primário de submit
+document.addEventListener('keydown', function(e){
+  if(e.key !== 'Enter') return;
+  const el = e.target;
+  if(!el.classList.contains('form-input')) return;
+  if(el.tagName === 'TEXTAREA') return; // mantém comportamento padrão em textarea
+
+  const modal = document.querySelector('.modal');
+  if(!modal) return;
+  e.preventDefault();
+
+  // Todos os inputs e selects focáveis do modal (exceto textarea)
+  const fields = Array.from(modal.querySelectorAll('.form-input:not(textarea)'));
+  const idx = fields.indexOf(el);
+
+  if(idx >= 0 && idx < fields.length - 1){
+    // Próximo campo
+    const next = fields[idx + 1];
+    next.focus();
+    // Se for select, abre o dropdown apenas em desktop
+    if(next.tagName === 'SELECT') next.focus();
+  } else {
+    // Último campo — dispara o botão principal (não ghost, não danger)
+    const submitBtn = modal.querySelector('.form-actions .btn:not(.btn-ghost):not(.btn-danger)');
+    if(submitBtn) submitBtn.click();
+  }
+});
+
 // ─── BOOT ─────────────────────────────────────────────────────────────────────
 const sc=document.getElementById('sel-currency'); if(sc) sc.value=(data.currency||'BRL');
 const mi=document.getElementById('meta-input'); if(mi) mi.value=(data.metaMensal||'');

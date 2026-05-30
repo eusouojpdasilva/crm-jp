@@ -379,7 +379,7 @@ let data = { leads:[], clientes:[], contratos:[], faturas:[], despesas:[], metaM
 // ─── FIELD MAPPING (DB snake_case → JS camelCase) ─────────────────────────────
 const mapLead    = r => ({id:r.id, nome:r.nome, nicho:r.nicho, proj:r.proj, status:r.status, valorEstimado:r.valor_estimado?String(r.valor_estimado):'', tipo:r.tipo, followup:r.followup, obs:r.obs, contatoData:r.contato_data, clienteId:r.cliente_id});
 const mapCliente = r => ({id:r.id, nome:r.nome, empresa:r.empresa, instagram:r.instagram, proj:r.proj, status:r.status, comoConheceu:r.como_conheceu, observacao:r.observacao, leadId:r.lead_id, av:r.av, createdAt:r.created_at});
-const mapContrato= r => ({id:r.id, clienteId:r.cliente_id, valor:r.valor, recorrencia:r.recorrencia, dataInicio:r.data_inicio, vencimento:r.vencimento, status:r.status, moeda:r.moeda});
+const mapContrato= r => ({id:r.id, clienteId:r.cliente_id, valor:r.valor, recorrencia:r.recorrencia, dataInicio:r.data_inicio, vencimento:r.vencimento, status:r.status, moeda:r.moeda, diaVencimento:r.dia_vencimento||null});
 const mapFatura  = r => ({id:r.id, clienteId:r.cliente_id, contratoId:r.contrato_id, mes:r.mes, valor:r.valor, status:r.status, dataPagamento:r.data_pagamento});
 const mapDespesa = r => ({id:r.id, item:r.item, valor:r.valor, periodo:r.periodo, categoria:r.categoria, data:r.data});
 
@@ -426,6 +426,35 @@ function val(id){ const el=document.getElementById(id); return el?el.value.trim(
 function modal(inner){ document.getElementById('modal-root').innerHTML=`<div class="modal-overlay" id="moverlay" onclick="if(event.target.id==='moverlay')closeModal()">${inner}</div>`; }
 function closeModal(){ document.getElementById('modal-root').innerHTML=''; }
 function getContratoAtivo(clienteId){ return (data.contratos||[]).find(ct=>ct.clienteId===clienteId&&ct.status==='Ativo'); }
+
+// Retorna o select de dia do vencimento (1-31)
+function selectDiaVencimento(selected){
+  const opts = `<option value="">Sem dia fixo</option>`+
+    Array.from({length:31},(_,i)=>i+1).map(d=>`<option value="${d}" ${selected==d?'selected':''}>Dia ${String(d).padStart(2,'0')}</option>`).join('');
+  return `<select class="form-input" id="ct_dia_venc">${opts}</select>`;
+}
+
+// Calcula a data de vencimento do pagamento num dado mês ('YYYY-MM') e diaVencimento
+function datVencPagamento(mes, diaVenc){
+  if(!diaVenc) return null;
+  const [y,m] = mes.split('-').map(Number);
+  // Ajusta para último dia do mês se dia > dias no mês (ex: dia 31 em fevereiro)
+  const ultimoDia = new Date(y, m, 0).getDate();
+  const dia = Math.min(diaVenc, ultimoDia);
+  return `${mes}-${String(dia).padStart(2,'0')}`;
+}
+
+// Status efetivo de uma cobrança no mês (considera vencimento automático sem escrever no DB)
+function statusEfetivo(clienteId, mes){
+  const fat = getFatura(clienteId, mes);
+  if(fat) return fat.status; // status explícito salvo pelo usuário
+  const ct = getContratoAtivo(clienteId);
+  if(!ct || !ct.diaVencimento) return 'pendente';
+  const dataVenc = datVencPagamento(mes, ct.diaVencimento);
+  if(!dataVenc) return 'pendente';
+  const hoje = new Date().toISOString().slice(0,10);
+  return dataVenc < hoje ? 'vencido-auto' : 'pendente'; // vencido-auto = vencido sem registro no DB
+}
 
 // Determina se um contrato gera cobrança no mês 'YYYY-MM' informado
 // Regras:
@@ -616,6 +645,7 @@ function openConvertLeadForm(leadId){
     <div class="form-row"><label class="form-label">Recorrência</label><select class="form-input" id="ct_recorrencia">${['Mensal','Trimestral','Anual','Pagamento Único'].map(o=>`<option>${o}</option>`).join('')}</select></div>
     <div class="form-row"><label class="form-label">Data de início</label><input class="form-input" type="date" id="ct_inicio" value="${hoje}"></div>
     <div class="form-row"><label class="form-label">Vencimento do contrato</label><input class="form-input" type="date" id="ct_vencimento"></div>
+    <div class="form-row"><label class="form-label">Dia do vencimento mensal</label>${selectDiaVencimento(null)}<div style="font-size:10px;color:var(--text3);margin-top:5px">Dia do mês em que o pagamento vence</div></div>
     <div class="form-actions">
       <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
       <button class="btn" style="border-color:var(--green);color:var(--green);background:rgba(93,202,165,0.08)" onclick="convertLead('${leadId}')">✓ Confirmar Conversão</button>
@@ -632,7 +662,7 @@ async function convertLead(leadId){
   const {data:cRow,error:cErr}=await sb.from('clientes').insert({nome,empresa:val('c_empresa'),instagram:val('c_instagram'),proj:l.proj,status:'Ativo',como_conheceu:val('c_conheceu'),observacao:val('c_obs'),lead_id:leadId,av}).select().single();
   if(cErr){ toast('Erro ao criar cliente: '+cErr.message); return; }
 
-  const {data:ctRow,error:ctErr}=await sb.from('contratos').insert({cliente_id:cRow.id,valor,recorrencia:val('ct_recorrencia')||'Mensal',data_inicio:val('ct_inicio')||new Date().toISOString().slice(0,10),vencimento:val('ct_vencimento')||null,status:'Ativo',moeda:data.currency||'BRL'}).select().single();
+  const {data:ctRow,error:ctErr}=await sb.from('contratos').insert({cliente_id:cRow.id,valor,recorrencia:val('ct_recorrencia')||'Mensal',data_inicio:val('ct_inicio')||new Date().toISOString().slice(0,10),vencimento:val('ct_vencimento')||null,status:'Ativo',moeda:data.currency||'BRL',dia_vencimento:parseInt(val('ct_dia_venc'))||null}).select().single();
   if(ctErr){ toast('Erro ao criar contrato: '+ctErr.message); return; }
 
   await sb.from('leads').update({cliente_id:cRow.id}).eq('id',leadId);
@@ -763,7 +793,8 @@ function openClienteForm(){
     <div class="form-row"><label class="form-label">Valor</label><input class="form-input" id="ct_valor" placeholder="0.00"></div>
     <div class="form-row"><label class="form-label">Recorrência</label><select class="form-input" id="ct_recorrencia">${['Mensal','Trimestral','Anual','Pagamento Único'].map(o=>`<option>${o}</option>`).join('')}</select></div>
     <div class="form-row"><label class="form-label">Data de início</label><input class="form-input" type="date" id="ct_inicio" value="${hoje}"></div>
-    <div class="form-row"><label class="form-label">Vencimento</label><input class="form-input" type="date" id="ct_vencimento"></div>
+    <div class="form-row"><label class="form-label">Vencimento do contrato</label><input class="form-input" type="date" id="ct_vencimento"></div>
+    <div class="form-row"><label class="form-label">Dia do vencimento mensal</label>${selectDiaVencimento(null)}<div style="font-size:10px;color:var(--text3);margin-top:5px">Dia do mês em que o pagamento vence</div></div>
     <div class="form-actions">
       <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
       <button class="btn" onclick="saveCliente()">Adicionar</button>
@@ -781,7 +812,7 @@ async function saveCliente(){
   data.clientes.unshift(mapCliente(cRow));
 
   if(valor>0){
-    const {data:ctRow,error:ctErr}=await sb.from('contratos').insert({cliente_id:cRow.id,valor,recorrencia:val('ct_recorrencia')||'Mensal',data_inicio:val('ct_inicio')||new Date().toISOString().slice(0,10),vencimento:val('ct_vencimento')||null,status:'Ativo',moeda:data.currency||'BRL'}).select().single();
+    const {data:ctRow,error:ctErr}=await sb.from('contratos').insert({cliente_id:cRow.id,valor,recorrencia:val('ct_recorrencia')||'Mensal',data_inicio:val('ct_inicio')||new Date().toISOString().slice(0,10),vencimento:val('ct_vencimento')||null,status:'Ativo',moeda:data.currency||'BRL',dia_vencimento:parseInt(val('ct_dia_venc'))||null}).select().single();
     if(!ctErr) data.contratos.push(mapContrato(ctRow));
   }
   closeModal(); render(); toast('Cliente adicionado!','success');
@@ -806,7 +837,8 @@ function openClienteEdit(id){
     <div class="form-row"><label class="form-label">Valor</label><input class="form-input" id="ct_valor" value="${ct?ct.valor:''}" placeholder="0.00"></div>
     <div class="form-row"><label class="form-label">Recorrência</label><select class="form-input" id="ct_recorrencia">${['Mensal','Trimestral','Anual','Pagamento Único'].map(o=>`<option ${ct&&ct.recorrencia===o?'selected':''}>${o}</option>`).join('')}</select></div>
     <div class="form-row"><label class="form-label">Data de início</label><input class="form-input" type="date" id="ct_inicio" value="${ct?ct.dataInicio:''}"></div>
-    <div class="form-row"><label class="form-label">Vencimento</label><input class="form-input" type="date" id="ct_vencimento" value="${ct?ct.vencimento:''}"></div>
+    <div class="form-row"><label class="form-label">Vencimento do contrato</label><input class="form-input" type="date" id="ct_vencimento" value="${ct?ct.vencimento:''}"></div>
+    <div class="form-row"><label class="form-label">Dia do vencimento mensal</label>${selectDiaVencimento(ct?ct.diaVencimento:null)}<div style="font-size:10px;color:var(--text3);margin-top:5px">Dia do mês em que o pagamento vence</div></div>
     <div class="form-actions">
       <button class="btn btn-danger" onclick="deleteCliente('${id}')">Remover</button>
       <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
@@ -833,11 +865,12 @@ async function updateCliente(id){
   const valor=parseFloat((val('ct_valor')||'0').replace(',','.'))||0;
   let ct=getContratoAtivo(id);
   if(ct){
-    const ctP={valor,recorrencia:val('ct_recorrencia')||ct.recorrencia,data_inicio:val('ct_inicio')||ct.dataInicio,vencimento:novoVencimento};
+    const diaVenc=parseInt(val('ct_dia_venc'))||null;
+    const ctP={valor,recorrencia:val('ct_recorrencia')||ct.recorrencia,data_inicio:val('ct_inicio')||ct.dataInicio,vencimento:novoVencimento,dia_vencimento:diaVenc};
     await sb.from('contratos').update(ctP).eq('id',ct.id);
-    Object.assign(ct,{valor,recorrencia:ctP.recorrencia,dataInicio:ctP.data_inicio,vencimento:ctP.vencimento});
+    Object.assign(ct,{valor,recorrencia:ctP.recorrencia,dataInicio:ctP.data_inicio,vencimento:ctP.vencimento,diaVencimento:diaVenc});
   } else if(valor>0){
-    const {data:ctRow}=await sb.from('contratos').insert({cliente_id:id,valor,recorrencia:val('ct_recorrencia')||'Mensal',data_inicio:val('ct_inicio'),vencimento:novoVencimento,status:'Ativo',moeda:data.currency||'BRL'}).select().single();
+    const {data:ctRow}=await sb.from('contratos').insert({cliente_id:id,valor,recorrencia:val('ct_recorrencia')||'Mensal',data_inicio:val('ct_inicio'),vencimento:novoVencimento,status:'Ativo',moeda:data.currency||'BRL',dia_vencimento:parseInt(val('ct_dia_venc'))||null}).select().single();
     if(ctRow) data.contratos.push(mapContrato(ctRow));
   }
 
@@ -867,14 +900,15 @@ function openAddContratoForm(clienteId){
     <div class="form-row"><label class="form-label">Valor</label><input class="form-input" id="ct_valor" placeholder="0.00"></div>
     <div class="form-row"><label class="form-label">Recorrência</label><select class="form-input" id="ct_recorrencia">${['Mensal','Trimestral','Anual','Pagamento Único'].map(o=>`<option>${o}</option>`).join('')}</select></div>
     <div class="form-row"><label class="form-label">Data de início</label><input class="form-input" type="date" id="ct_inicio" value="${hoje}"></div>
-    <div class="form-row"><label class="form-label">Vencimento</label><input class="form-input" type="date" id="ct_vencimento"></div>
+    <div class="form-row"><label class="form-label">Vencimento do contrato</label><input class="form-input" type="date" id="ct_vencimento"></div>
+    <div class="form-row"><label class="form-label">Dia do vencimento mensal</label>${selectDiaVencimento(null)}</div>
     <div class="form-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn" onclick="saveContrato('${clienteId}')">Salvar</button></div>
   </div>`);
 }
 async function saveContrato(clienteId){
   const valor=parseFloat((val('ct_valor')||'0').replace(',','.'))||0;
   if(!valor){ toast('Informe o valor'); return; }
-  const {data:ctRow,error}=await sb.from('contratos').insert({cliente_id:clienteId,valor,recorrencia:val('ct_recorrencia')||'Mensal',data_inicio:val('ct_inicio'),vencimento:val('ct_vencimento')||null,status:'Ativo',moeda:data.currency||'BRL'}).select().single();
+  const {data:ctRow,error}=await sb.from('contratos').insert({cliente_id:clienteId,valor,recorrencia:val('ct_recorrencia')||'Mensal',data_inicio:val('ct_inicio'),vencimento:val('ct_vencimento')||null,status:'Ativo',moeda:data.currency||'BRL',dia_vencimento:parseInt(val('ct_dia_venc'))||null}).select().single();
   if(error){ toast('Erro ao salvar contrato'); return; }
   data.contratos.push(mapContrato(ctRow));
   closeModal(); render(); toast('Contrato adicionado!','success');
@@ -940,12 +974,12 @@ function renderFinanceiro(){
 
   const ctValor = c => (getContratoAtivo(c.id)||{}).valor||0;
 
-  // ── Mês selecionado ───────────────────────────────────────────────────────
-  const recebido  = cliList.filter(c=>{ const f=getFatura(c.id,mes); return f&&f.status==='pago'; });
-  const vencido   = cliList.filter(c=>{ const f=getFatura(c.id,mes); return f&&f.status==='vencido'; });
-  const aReceber  = cliList.filter(c=>{ const f=getFatura(c.id,mes); return !f||f.status==='pendente'; });
+  // ── Mês selecionado — usa statusEfetivo (inclui vencimento automático por dia) ──
+  const recebido  = cliList.filter(c=> statusEfetivo(c.id,mes)==='pago');
+  const vencidoList= cliList.filter(c=>{ const s=statusEfetivo(c.id,mes); return s==='vencido'||s==='vencido-auto'; });
+  const aReceber  = cliList.filter(c=> statusEfetivo(c.id,mes)==='pendente');
   const totalRecebido = recebido.reduce((s,c)=>s+ctValor(c),0);
-  const totalVencido  = vencido.reduce((s,c)=>s+ctValor(c),0);
+  const totalVencido  = vencidoList.reduce((s,c)=>s+ctValor(c),0);
   const totalAReceber = aReceber.reduce((s,c)=>s+ctValor(c),0);
 
   const despesasMes = (data.despesas||[]).reduce((s,dep)=>{
@@ -1077,28 +1111,43 @@ function renderFinanceiro(){
           <th style="padding:13px 18px;text-align:left;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Empresa</th>
           <th style="padding:13px 18px;text-align:left;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Valor</th>
           <th style="padding:13px 18px;text-align:left;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Recorrência</th>
+          <th style="padding:13px 18px;text-align:left;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Vence</th>
           <th style="padding:13px 18px;text-align:left;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Status</th>
           <th style="padding:13px 18px;text-align:left;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Data Pag.</th>
           <th style="padding:13px 18px;border-bottom:1px solid var(--border)"></th>
         </tr></thead><tbody>`;
     cliList.forEach(c=>{
       const fat = getFatura(c.id, mes);
-      const stKey = fat ? fat.status : 'pendente';
-      const st = stCfg[stKey]||stCfg.pendente;
+      const stKey = statusEfetivo(c.id, mes);
+      const stDisplay = stKey==='vencido-auto'?'vencido':stKey; // normaliza para exibição
+      const st = stCfg[stDisplay]||stCfg.pendente;
       const ct2 = getContratoAtivo(c.id);
+      // Info do dia de vencimento
+      const diaVenc = ct2 ? ct2.diaVencimento : null;
+      const dataVencPag = diaVenc ? datVencPagamento(mes, diaVenc) : null;
+      const hoje2 = new Date().toISOString().slice(0,10);
+      const vencAuto = stKey==='vencido-auto';
       const recLabel = ct2 ? ct2.recorrencia : '—';
       const recKey = (recLabel||'').toLowerCase();
       const recBadge = recKey.includes('mensal')?'var(--green)':recKey.includes('único')||recKey.includes('unico')?'var(--amber)':recKey.includes('trimestral')?'var(--blue)':recKey.includes('anual')?'#B07FEB':'var(--text2)';
-      const acoes = stKey==='pago'
+      const acoes = stDisplay==='pago'
         ? `<button class="btn btn-ghost" style="font-size:9px;padding:4px 10px" onclick="marcarPendente('${c.id}')">Desfazer</button>`
         : `<button class="btn" style="font-size:9px;padding:4px 10px;border-color:var(--green);color:var(--green)" onclick="marcarPago('${c.id}')">Marcar Pago</button>
-           <button class="btn btn-danger" style="font-size:9px;padding:4px 10px;margin-left:4px" onclick="marcarVencido('${c.id}')">Vencido</button>`;
+           ${!vencAuto?`<button class="btn btn-danger" style="font-size:9px;padding:4px 10px;margin-left:4px" onclick="marcarVencido('${c.id}')">Vencido</button>`:''}
+           ${vencAuto?`<button class="btn btn-ghost" style="font-size:9px;padding:4px 10px;margin-left:4px" onclick="marcarPendente('${c.id}')">Ignorar</button>`:''}
+          `;
       h+=`<tr style="border-bottom:1px solid var(--border)">
         <td style="padding:15px 18px;font-size:13px;font-weight:700;color:var(--text)">${c.nome}</td>
         <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${c.empresa||'—'}</td>
         <td style="padding:15px 18px;font-size:14px;font-weight:800;color:var(--terra)">${formatCurrency(ctValor(c))}</td>
         <td style="padding:15px 18px"><span style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${recBadge};border:1px solid ${recBadge}44;padding:2px 8px;border-radius:2px">${recLabel}</span></td>
-        <td style="padding:15px 18px"><span style="font-size:9px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:${st.cor};background:${st.bg};border:1px solid ${st.brd};padding:3px 10px;border-radius:2px">${st.label}</span></td>
+        <td style="padding:15px 18px;font-size:12px;color:${vencAuto?'var(--red)':'var(--text2)'};font-weight:${vencAuto?'700':'400'}">
+          ${dataVencPag?`Dia ${String(diaVenc).padStart(2,'0')}${vencAuto?' ⚠':''}`:' —'}
+        </td>
+        <td style="padding:15px 18px">
+          <span style="font-size:9px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:${st.cor};background:${st.bg};border:1px solid ${st.brd};padding:3px 10px;border-radius:2px">${st.label}</span>
+          ${vencAuto?`<div style="font-size:9px;color:var(--red);margin-top:4px;font-weight:600">venceu em ${dataVencPag}</div>`:''}
+        </td>
         <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${fat&&fat.dataPagamento?fat.dataPagamento:'—'}</td>
         <td style="padding:15px 18px;text-align:right;white-space:nowrap">${acoes}</td>
       </tr>`;

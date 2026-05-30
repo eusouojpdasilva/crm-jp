@@ -426,6 +426,43 @@ function val(id){ const el=document.getElementById(id); return el?el.value.trim(
 function modal(inner){ document.getElementById('modal-root').innerHTML=`<div class="modal-overlay" id="moverlay" onclick="if(event.target.id==='moverlay')closeModal()">${inner}</div>`; }
 function closeModal(){ document.getElementById('modal-root').innerHTML=''; }
 function getContratoAtivo(clienteId){ return (data.contratos||[]).find(ct=>ct.clienteId===clienteId&&ct.status==='Ativo'); }
+
+// Determina se um contrato gera cobrança no mês 'YYYY-MM' informado
+// Regras:
+//   Mensal       → todo mês dentro do período do contrato
+//   Trimestral   → a cada 3 meses a partir de dataInicio
+//   Anual        → 1× por ano no mês de dataInicio
+//   Pagamento Único → SOMENTE no mês de dataInicio
+function isCobravel(ct, mes){
+  if(!ct || ct.status !== 'Ativo') return false;
+  const rec = (ct.recorrencia||'').toLowerCase();
+  const inicio = ct.dataInicio ? ct.dataInicio.slice(0,7) : null; // 'YYYY-MM'
+  const fim    = ct.vencimento ? ct.vencimento.slice(0,7) : null;
+
+  // Fora do período do contrato → não cobra
+  if(inicio && mes < inicio) return false;
+  if(fim    && mes > fim)    return false;
+
+  if(rec.includes('único') || rec.includes('unico') || rec === 'pagamento único'){
+    // Pagamento Único: SOMENTE no mês de início
+    return mes === inicio;
+  }
+  if(rec.includes('mensal'))      return true;
+  if(rec.includes('trimestral')){
+    if(!inicio) return true;
+    const [iy,im] = inicio.split('-').map(Number);
+    const [cy,cm] = mes.split('-').map(Number);
+    const diff = (cy - iy)*12 + (cm - im);
+    return diff >= 0 && diff % 3 === 0;
+  }
+  if(rec.includes('anual')){
+    if(!inicio) return true;
+    const im = parseInt(inicio.split('-')[1]);
+    const cm = parseInt(mes.split('-')[1]);
+    return im === cm;
+  }
+  return true; // fallback
+}
 function setCurrency(c){ data.currency=c; persistMeta(); render(); }
 function saveMeta(){ const el=document.getElementById('meta-input'); if(!el) return; data.metaMensal=parseFloat(el.value.replace(',','.'))||0; persistMeta(); render(); }
 function formatCurrency(v){ if(!v&&v!==0) return '—'; return new Intl.NumberFormat(data.currency==='BRL'?'pt-BR':'en-US',{style:'currency',currency:data.currency||'BRL'}).format(v); }
@@ -836,8 +873,13 @@ async function marcarVencido(clienteId){
 function renderFinanceiro(){
   const mes = finMesStr();
   const anoStr = String(finYear);
-  const cliAll = filtered(data.clientes || []).filter(c=>(c.status||'').toLowerCase()==='ativo'&&getContratoAtivo(c.id));
-  const cliList = cliAll; // alias legível
+
+  // Clientes cobráveis NO MÊS SELECIONADO — respeita recorrência
+  const cliList = filtered(data.clientes || []).filter(c=>{
+    if((c.status||'').toLowerCase() !== 'ativo') return false;
+    const ct = getContratoAtivo(c.id);
+    return ct && isCobravel(ct, mes);
+  });
 
   const ctValor = c => (getContratoAtivo(c.id)||{}).valor||0;
 
@@ -859,8 +901,11 @@ function renderFinanceiro(){
   // ── Acumulado anual ───────────────────────────────────────────────────────
   const receitaAnual = (data.faturas||[]).filter(f=>f.status==='pago'&&f.mes&&f.mes.startsWith(anoStr))
     .reduce((s,f)=>s+(f.valor||0),0);
+  // Despesas anuais: mensais × meses já passados no ano + únicas do ano
+  const mesAtual = new Date().getMonth()+1;
+  const mesesPassados = finYear < new Date().getFullYear() ? 12 : mesAtual;
   const despesasAnual = (data.despesas||[]).reduce((s,dep)=>{
-    if(dep.periodo==='Mensal') return s+(dep.valor||0)*12;
+    if(dep.periodo==='Mensal') return s+(dep.valor||0)*mesesPassados;
     if(dep.periodo==='Único'&&dep.data&&dep.data.startsWith(anoStr)) return s+(dep.valor||0);
     return s;
   },0);
@@ -908,7 +953,7 @@ function renderFinanceiro(){
     <div style="background:var(--bg2);padding:20px 22px;border-top:2px solid var(--red)">
       <div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Despesas Anuais</div>
       <div style="font-size:28px;font-weight:900;letter-spacing:-1px;color:var(--red);margin-bottom:6px">${formatCurrency(despesasAnual)}</div>
-      <div style="font-size:10px;color:var(--text3)">mensais × 12 + únicas do ano</div>
+      <div style="font-size:10px;color:var(--text3)">mensais × ${mesesPassados} meses + únicas do ano</div>
     </div>
     <div style="background:var(--bg2);padding:20px 22px;border-top:2px solid ${saldoAnual<0?'var(--red)':'var(--terra)'}">
       <div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Saldo Anual</div>
@@ -983,7 +1028,10 @@ function renderFinanceiro(){
       const fat = getFatura(c.id, mes);
       const stKey = fat ? fat.status : 'pendente';
       const st = stCfg[stKey]||stCfg.pendente;
-      const recBadge = (c.recorrencia||'').toLowerCase().includes('mensal')?'var(--green)':(c.recorrencia||'').toLowerCase().includes('único')||(c.recorrencia||'').toLowerCase().includes('unico')?'var(--amber)':'var(--blue)';
+      const ct2 = getContratoAtivo(c.id);
+      const recLabel = ct2 ? ct2.recorrencia : '—';
+      const recKey = (recLabel||'').toLowerCase();
+      const recBadge = recKey.includes('mensal')?'var(--green)':recKey.includes('único')||recKey.includes('unico')?'var(--amber)':recKey.includes('trimestral')?'var(--blue)':recKey.includes('anual')?'#B07FEB':'var(--text2)';
       const acoes = stKey==='pago'
         ? `<button class="btn btn-ghost" style="font-size:9px;padding:4px 10px" onclick="marcarPendente('${c.id}')">Desfazer</button>`
         : `<button class="btn" style="font-size:9px;padding:4px 10px;border-color:var(--green);color:var(--green)" onclick="marcarPago('${c.id}')">Marcar Pago</button>
@@ -992,7 +1040,7 @@ function renderFinanceiro(){
         <td style="padding:15px 18px;font-size:13px;font-weight:700;color:var(--text)">${c.nome}</td>
         <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${c.empresa||'—'}</td>
         <td style="padding:15px 18px;font-size:14px;font-weight:800;color:var(--terra)">${formatCurrency(ctValor(c))}</td>
-        <td style="padding:15px 18px"><span style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${recBadge};border:1px solid ${recBadge}44;padding:2px 8px;border-radius:2px">${c.recorrencia||'—'}</span></td>
+        <td style="padding:15px 18px"><span style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${recBadge};border:1px solid ${recBadge}44;padding:2px 8px;border-radius:2px">${recLabel}</span></td>
         <td style="padding:15px 18px"><span style="font-size:9px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:${st.cor};background:${st.bg};border:1px solid ${st.brd};padding:3px 10px;border-radius:2px">${st.label}</span></td>
         <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${fat&&fat.dataPagamento?fat.dataPagamento:'—'}</td>
         <td style="padding:15px 18px;text-align:right;white-space:nowrap">${acoes}</td>

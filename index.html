@@ -476,7 +476,7 @@ function renderPipeline(){
     if(!cols.length) h+=`<div class="empty-col">Vazio</div>`;
     cols.forEach(l=>{
       const convertido=!!l.clienteId;
-      h+=`<div class="card" draggable="true" ondragstart="event.dataTransfer.setData('text/plain',${l.id})" onclick="openLeadForm(${l.id})">
+      h+=`<div class="card" draggable="true" ondragstart="event.dataTransfer.setData('text/plain','${l.id}')" onclick="openLeadForm('${l.id}')">
         <div class="card-proj">
           <span class="badge ${BADGE[l.proj]}">${PROJ[l.proj]}</span>
           ${convertido?`<span style="margin-left:6px;font-size:8px;font-weight:800;color:var(--green);background:rgba(93,202,165,0.1);border:1px solid rgba(93,202,165,0.25);padding:2px 7px;border-radius:2px;letter-spacing:1px">✓ CLIENTE</span>`:''}
@@ -489,7 +489,7 @@ function renderPipeline(){
         </div>
         <div class="card-footer">
           <span class="card-date">${l.contatoData||''}</span>
-          ${st==='fechado'&&!convertido?`<button class="btn" style="font-size:8px;padding:3px 9px" onclick="event.stopPropagation();openConvertLeadForm(${l.id})">Converter →</button>`:''}
+          ${st==='fechado'&&!convertido?`<button class="btn" style="font-size:8px;padding:3px 9px" onclick="event.stopPropagation();openConvertLeadForm('${l.id}')">Converter →</button>`:''}
         </div>
       </div>`;
     });
@@ -525,10 +525,10 @@ function openLeadForm(id){
     <div class="form-row"><label class="form-label">Valor estimado</label><input class="form-input" id="fv" value="${l?l.valorEstimado||'':''}" placeholder="Ex: 3500"></div>
     <div class="form-row"><label class="form-label">Observações</label><textarea class="form-input" id="fo">${l?l.obs||'':''}</textarea></div>
     <div class="form-actions">
-      ${l&&!convertido?`<button class="btn btn-danger" onclick="deleteLead(${l.id})">Remover</button>`:''}
-      ${l&&l.status==='fechado'&&!convertido?`<button class="btn" style="border-color:var(--green);color:var(--green)" onclick="closeModal();openConvertLeadForm(${l.id})">Converter em Cliente →</button>`:''}
+      ${l&&!convertido?`<button class="btn btn-danger" onclick="deleteLead('${l.id}')">Remover</button>`:''}
+      ${l&&l.status==='fechado'&&!convertido?`<button class="btn" style="border-color:var(--green);color:var(--green)" onclick="closeModal();openConvertLeadForm('${l.id}')">Converter em Cliente →</button>`:''}
       <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
-      <button class="btn" onclick="${l?`updateLead(${l.id})`:'saveLead()'}">${l?'Salvar':'Adicionar'}</button>
+      <button class="btn" onclick="${l?`updateLead('${l.id}')`:'saveLead()'}">${l?'Salvar':'Adicionar'}</button>
     </div>
   </div>`);
 }
@@ -580,7 +580,7 @@ function openConvertLeadForm(leadId){
     <div class="form-row"><label class="form-label">Vencimento do contrato</label><input class="form-input" type="date" id="ct_vencimento"></div>
     <div class="form-actions">
       <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
-      <button class="btn" style="border-color:var(--green);color:var(--green);background:rgba(93,202,165,0.08)" onclick="convertLead(${leadId})">✓ Confirmar Conversão</button>
+      <button class="btn" style="border-color:var(--green);color:var(--green);background:rgba(93,202,165,0.08)" onclick="convertLead('${leadId}')">✓ Confirmar Conversão</button>
     </div>
   </div>`);
 }
@@ -632,7 +632,7 @@ function renderClientes(){
               ${lead?`<span style="font-size:8px;color:var(--terra);background:var(--terra7);border:1px solid rgba(194,107,58,0.2);padding:1px 6px;border-radius:2px">via pipeline</span>`:''}
             </div>
           </div>
-          <button class="btn btn-ghost" style="font-size:9px;padding:4px 10px" onclick="openClienteEdit(${c.id})">Editar</button>
+          <button class="btn btn-ghost" style="font-size:9px;padding:4px 10px" onclick="openClienteEdit('${c.id}')">Editar</button>
         </div>
         ${ct
           ?`<div style="background:var(--bg3);border-bottom:1px solid var(--border);padding:14px 22px;display:flex;gap:28px;align-items:center;flex-wrap:wrap">
@@ -647,7 +647,7 @@ function renderClientes(){
             </div>`
           :`<div style="background:rgba(239,159,39,0.05);border-bottom:1px solid rgba(239,159,39,0.15);padding:10px 22px;font-size:11px;color:var(--amber);font-weight:700">
               ⚠ Sem contrato ativo —
-              <button onclick="openAddContratoForm(${c.id})" style="background:none;border:none;color:var(--amber);text-decoration:underline;cursor:pointer;font-family:inherit;font-size:11px;font-weight:700;padding:0">Adicionar contrato</button>
+              <button onclick="openAddContratoForm('${c.id}')" style="background:none;border:none;color:var(--amber);text-decoration:underline;cursor:pointer;font-family:inherit;font-size:11px;font-weight:700;padding:0">Adicionar contrato</button>
             </div>`}
         <div class="client-body">
           <div style="display:flex;gap:16px;flex-wrap:wrap">
@@ -1021,7 +1021,7 @@ function renderFinanceiro(){
         <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${dep.periodo}</td>
         <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${dep.categoria||'—'}</td>
         <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${dep.data||'—'}</td>
-        <td style="padding:15px 18px;text-align:right"><button class="btn btn-danger" style="font-size:9px;padding:4px 11px" onclick="deleteExpense(${dep.id})">Remover</button></td>
+        <td style="padding:15px 18px;text-align:right"><button class="btn btn-danger" style="font-size:9px;padding:4px 11px" onclick="deleteExpense('${dep.id}')">Remover</button></td>
       </tr>`).join('')+
       `</tbody></table></div>`;
   } else {

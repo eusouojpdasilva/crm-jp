@@ -535,7 +535,7 @@ const mapTarefa  = r => ({id:r.id, clienteId:r.cliente_id, titulo:r.titulo, obs:
 const mapCliente = r => ({id:r.id, nome:r.nome, empresa:r.empresa, instagram:r.instagram, proj:r.proj, status:r.status, comoConheceu:r.como_conheceu, observacao:r.observacao, leadId:r.lead_id, av:r.av, createdAt:r.created_at, cidade:r.cidade||'', estado:r.estado||'', pais:r.pais||'Brasil'});
 const mapContrato= r => ({id:r.id, clienteId:r.cliente_id, valor:r.valor, recorrencia:r.recorrencia, dataInicio:r.data_inicio, vencimento:r.vencimento, status:r.status, moeda:r.moeda, diaVencimento:r.dia_vencimento||null});
 const mapFatura  = r => ({id:r.id, clienteId:r.cliente_id, contratoId:r.contrato_id, mes:r.mes, valor:r.valor, status:r.status, dataPagamento:r.data_pagamento});
-const mapDespesa = r => ({id:r.id, item:r.item, valor:r.valor, periodo:r.periodo, categoria:r.categoria, data:r.data});
+const mapDespesa = r => ({id:r.id, item:r.item, valor:r.valor, periodo:r.periodo, categoria:r.categoria, data:r.data, dataFim:r.data_fim||null});
 
 // ─── TOAST ────────────────────────────────────────────────────────────────────
 function toast(msg, type='error'){
@@ -1548,11 +1548,17 @@ function renderFinanceiro(){
   const totalVencido  = vencidoList.reduce((s,c)=>s+ctValor(c),0);
   const totalAReceber = aReceber.reduce((s,c)=>s+ctValor(c),0);
 
+  const despesaAtivaNoMes = (dep, m) => {
+    const inicio = dep.data ? dep.data.slice(0,7) : null;
+    const fim    = dep.dataFim ? dep.dataFim.slice(0,7) : null;
+    if(inicio && inicio > m) return false; // ainda não havia começado
+    if(fim    && fim    < m) return false; // já havia encerrado
+    return true;
+  };
+
   const despesasMes = (data.despesas||[]).reduce((s,dep)=>{
     if(dep.periodo==='Mensal'){
-      // só conta se a despesa foi incluída até o mês selecionado
-      if(!dep.data || dep.data.slice(0,7)<=mes) return s+(dep.valor||0);
-      return s;
+      return despesaAtivaNoMes(dep, mes) ? s+(dep.valor||0) : s;
     }
     if(dep.periodo==='Único'&&dep.data&&dep.data.startsWith(mes)) return s+(dep.valor||0);
     return s;
@@ -1567,14 +1573,13 @@ function renderFinanceiro(){
   const mesesPassados = finYear < new Date().getFullYear() ? 12 : mesAtual;
   const despesasAnual = (data.despesas||[]).reduce((s,dep)=>{
     if(dep.periodo==='Mensal'){
-      if(!dep.data) return s+(dep.valor||0)*mesesPassados;
-      const depAnoStr = dep.data.slice(0,4);
-      if(depAnoStr > anoStr) return s; // começa após o ano selecionado
-      if(depAnoStr < anoStr) return s+(dep.valor||0)*mesesPassados; // já existia antes do ano
-      // começa neste ano — conta apenas a partir do mês de início
-      const depMes = parseInt(dep.data.slice(5,7));
-      const mesesAtivos = Math.max(0, mesesPassados - depMes + 1);
-      return s+(dep.valor||0)*mesesAtivos;
+      // conta cada mês do ano (até mesesPassados) em que a despesa estava ativa
+      let count = 0;
+      for(let m=1; m<=mesesPassados; m++){
+        const mc = `${anoStr}-${String(m).padStart(2,'0')}`;
+        if(despesaAtivaNoMes(dep, mc)) count++;
+      }
+      return s+(dep.valor||0)*count;
     }
     if(dep.periodo==='Único'&&dep.data&&dep.data.startsWith(anoStr)) return s+(dep.valor||0);
     return s;
@@ -1737,8 +1742,14 @@ function renderFinanceiro(){
   }
 
   // ── DESPESAS ──────────────────────────────────────────────────────────────
+  // Exibe apenas despesas ativas (sem data_fim) + únicas do mês selecionado
+  const despesasVisiveis = (data.despesas||[]).filter(dep=>{
+    if(dep.periodo==='Mensal') return !dep.dataFim; // ativas (não encerradas)
+    return dep.data && dep.data.startsWith(mes);    // únicas apenas do mês
+  });
+
   h+=label('Despesas');
-  if((data.despesas||[]).length){
+  if(despesasVisiveis.length){
     h+=`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;overflow:hidden">
       <table style="width:100%;border-collapse:collapse">
         <thead><tr style="background:var(--bg3)">
@@ -1746,20 +1757,25 @@ function renderFinanceiro(){
           <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Valor</th>
           <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Período</th>
           <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Categoria</th>
-          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Data</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Desde</th>
           <th style="padding:13px 18px;border-bottom:1px solid var(--border)"></th>
         </tr></thead><tbody>`+
-      (data.despesas||[]).map(dep=>`<tr style="border-bottom:1px solid var(--border)">
+      despesasVisiveis.map(dep=>`<tr style="border-bottom:1px solid var(--border)">
         <td style="padding:15px 18px;font-size:13px;font-weight:700;color:var(--text)">${dep.item}</td>
         <td style="padding:15px 18px;font-size:14px;font-weight:800;color:var(--red)">${formatCurrency(dep.valor)}</td>
         <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${dep.periodo}</td>
         <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${dep.categoria||'—'}</td>
-        <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${dep.data||'—'}</td>
-        <td style="padding:15px 18px;text-align:right"><button class="btn btn-danger" style="font-size:13px;padding:4px 11px" onclick="deleteExpense('${dep.id}')">Remover</button></td>
+        <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${dep.data?new Date(dep.data+'T00:00:00').toLocaleDateString('pt-BR',{month:'short',year:'numeric'}):'—'}</td>
+        <td style="padding:15px 18px;text-align:right">
+          ${dep.periodo==='Mensal'
+            ? `<button class="btn btn-danger" style="font-size:12px;padding:4px 11px" onclick="encerrarDespesa('${dep.id}')">Encerrar</button>`
+            : `<button class="btn btn-danger" style="font-size:12px;padding:4px 11px" onclick="deleteExpense('${dep.id}')">Remover</button>`
+          }
+        </td>
       </tr>`).join('')+
       `</tbody></table></div>`;
   } else {
-    h+=`<div class="empty-state"><div class="empty-icon">💸</div><div class="empty-text">Nenhuma despesa registrada</div></div>`;
+    h+=`<div class="empty-state"><div class="empty-icon">💸</div><div class="empty-text">Nenhuma despesa ativa neste período</div></div>`;
   }
 
   document.getElementById('main-content').innerHTML = h;
@@ -1786,6 +1802,19 @@ async function saveExpense(){
   data.despesas.unshift(mapDespesa(row));
   closeModal(); render();
 }
+async function encerrarDespesa(id){
+  const dep = data.despesas.find(x=>x.id===id); if(!dep) return;
+  const hoje = new Date();
+  // encerra no último dia do mês atual
+  const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth()+1, 0).toISOString().slice(0,10);
+  const mesLabel = hoje.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+  if(!confirm(`Encerrar "${dep.item}" ao final de ${mesLabel}?\n\nEla continuará aparecendo nos meses anteriores em que estava ativa.`)) return;
+  const {error}=await sb.from('despesas').update({data_fim:ultimoDia}).eq('id',id);
+  if(error){ toast('Erro ao encerrar despesa'); return; }
+  dep.dataFim=ultimoDia;
+  render(); toast('Despesa encerrada','success');
+}
+
 async function deleteExpense(id){
   if(!confirm('Remover esta despesa?')) return;
   const {error}=await sb.from('despesas').delete().eq('id',id);

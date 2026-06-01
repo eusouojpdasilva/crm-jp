@@ -1549,7 +1549,11 @@ function renderFinanceiro(){
   const totalAReceber = aReceber.reduce((s,c)=>s+ctValor(c),0);
 
   const despesasMes = (data.despesas||[]).reduce((s,dep)=>{
-    if(dep.periodo==='Mensal') return s+(dep.valor||0);
+    if(dep.periodo==='Mensal'){
+      // só conta se a despesa foi incluída até o mês selecionado
+      if(!dep.data || dep.data.slice(0,7)<=mes) return s+(dep.valor||0);
+      return s;
+    }
     if(dep.periodo==='Único'&&dep.data&&dep.data.startsWith(mes)) return s+(dep.valor||0);
     return s;
   },0);
@@ -1562,7 +1566,16 @@ function renderFinanceiro(){
   const mesAtual = new Date().getMonth()+1;
   const mesesPassados = finYear < new Date().getFullYear() ? 12 : mesAtual;
   const despesasAnual = (data.despesas||[]).reduce((s,dep)=>{
-    if(dep.periodo==='Mensal') return s+(dep.valor||0)*mesesPassados;
+    if(dep.periodo==='Mensal'){
+      if(!dep.data) return s+(dep.valor||0)*mesesPassados;
+      const depAnoStr = dep.data.slice(0,4);
+      if(depAnoStr > anoStr) return s; // começa após o ano selecionado
+      if(depAnoStr < anoStr) return s+(dep.valor||0)*mesesPassados; // já existia antes do ano
+      // começa neste ano — conta apenas a partir do mês de início
+      const depMes = parseInt(dep.data.slice(5,7));
+      const mesesAtivos = Math.max(0, mesesPassados - depMes + 1);
+      return s+(dep.valor||0)*mesesAtivos;
+    }
     if(dep.periodo==='Único'&&dep.data&&dep.data.startsWith(anoStr)) return s+(dep.valor||0);
     return s;
   },0);
@@ -1579,7 +1592,7 @@ function renderFinanceiro(){
 
   // ── Seletor de período ────────────────────────────────────────────────────
   let periodoOpts = '';
-  for(let y=new Date().getFullYear()+1; y>=2024; y--){
+  for(let y=2027; y>=2026; y--){
     for(let m=12; m>=1; m--){
       const v=`${y}-${String(m).padStart(2,'0')}`;
       periodoOpts+=`<option value="${v}" ${v===mes?'selected':''}>${MESES[m-1]} ${y}</option>`;

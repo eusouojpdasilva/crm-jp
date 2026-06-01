@@ -1714,12 +1714,13 @@ function renderFinanceiro(){
       const recLabel = ct2 ? ct2.recorrencia : '—';
       const recKey = (recLabel||'').toLowerCase();
       const recBadge = recKey.includes('mensal')?'var(--green)':recKey.includes('único')||recKey.includes('unico')?'var(--amber)':recKey.includes('trimestral')?'var(--blue)':recKey.includes('anual')?'#B07FEB':'var(--text2)';
-      const acoes = stDisplay==='pago'
-        ? `<button class="btn btn-ghost" style="font-size:13px;padding:4px 10px" onclick="marcarPendente('${c.id}')">Desfazer</button>`
-        : `<button class="btn" style="font-size:13px;padding:4px 10px;border-color:var(--green);color:var(--green)" onclick="marcarPago('${c.id}')">Marcar Pago</button>
-           ${!vencAuto?`<button class="btn btn-danger" style="font-size:13px;padding:4px 10px;margin-left:4px" onclick="marcarVencido('${c.id}')">Vencido</button>`:''}
-           ${vencAuto?`<button class="btn btn-ghost" style="font-size:13px;padding:4px 10px;margin-left:4px" onclick="marcarPendente('${c.id}')">Ignorar</button>`:''}
-          `;
+      const acoes = `<button class="btn btn-ghost" style="font-size:12px;padding:4px 10px;margin-right:4px" onclick="openEditFatura('${c.id}')">Editar</button>`
+        + (stDisplay==='pago'
+        ? `<button class="btn btn-ghost" style="font-size:12px;padding:4px 10px" onclick="marcarPendente('${c.id}')">Desfazer</button>`
+        : `<button class="btn" style="font-size:12px;padding:4px 10px;border-color:var(--green);color:var(--green)" onclick="marcarPago('${c.id}')">Marcar Pago</button>
+           ${!vencAuto?`<button class="btn btn-danger" style="font-size:12px;padding:4px 10px;margin-left:4px" onclick="marcarVencido('${c.id}')">Vencido</button>`:''}
+           ${vencAuto?`<button class="btn btn-ghost" style="font-size:12px;padding:4px 10px;margin-left:4px" onclick="marcarPendente('${c.id}')">Ignorar</button>`:''}
+          `);
       h+=`<tr style="border-bottom:1px solid var(--border)">
         <td style="padding:15px 18px;font-size:13px;font-weight:700;color:var(--text)">${c.nome}</td>
         <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${c.empresa||'—'}</td>
@@ -1766,7 +1767,8 @@ function renderFinanceiro(){
         <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${dep.periodo}</td>
         <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${dep.categoria||'—'}</td>
         <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${dep.data?new Date(dep.data+'T00:00:00').toLocaleDateString('pt-BR',{month:'short',year:'numeric'}):'—'}</td>
-        <td style="padding:15px 18px;text-align:right">
+        <td style="padding:15px 18px;text-align:right;white-space:nowrap;display:flex;gap:6px;justify-content:flex-end;align-items:center">
+          <button class="btn btn-ghost" style="font-size:12px;padding:4px 11px" onclick="openEditDespesa('${dep.id}')">Editar</button>
           ${dep.periodo==='Mensal'
             ? `<button class="btn btn-danger" style="font-size:12px;padding:4px 11px" onclick="encerrarDespesa('${dep.id}')">Encerrar</button>`
             : `<button class="btn btn-danger" style="font-size:12px;padding:4px 11px" onclick="deleteExpense('${dep.id}')">Remover</button>`
@@ -1802,6 +1804,89 @@ async function saveExpense(){
   data.despesas.unshift(mapDespesa(row));
   closeModal(); render();
 }
+function openEditFatura(clienteId){
+  const ct=getContratoAtivo(clienteId); if(!ct) return;
+  const mes=finMesStr();
+  const fat=getFatura(clienteId,mes);
+  const c=data.clientes.find(x=>x.id===clienteId);
+  modal(`<div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-divider"></div>
+    <div class="modal-title">Editar Cobrança</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:20px">${c?c.nome:''} · ${MESES[finMonth-1]} ${finYear}</div>
+    <div class="form-row"><label class="form-label">Valor cobrado</label>
+      <input class="form-input" id="ef_valor" value="${fat?fat.valor:ct.valor}" placeholder="0.00">
+    </div>
+    <div class="form-row"><label class="form-label">Status</label>
+      <select class="form-input" id="ef_status">
+        <option value="pago" ${fat&&fat.status==='pago'?'selected':''}>Recebido</option>
+        <option value="pendente" ${!fat||fat.status==='pendente'?'selected':''}>Pendente</option>
+        <option value="vencido" ${fat&&fat.status==='vencido'?'selected':''}>Vencido</option>
+      </select>
+    </div>
+    <div class="form-row"><label class="form-label">Data de pagamento</label>
+      <input class="form-input" type="date" id="ef_datapag" value="${fat&&fat.dataPagamento?fat.dataPagamento:''}">
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn" onclick="saveEditFatura('${clienteId}')">Salvar</button>
+    </div>
+  </div>`);
+}
+
+async function saveEditFatura(clienteId){
+  const ct=getContratoAtivo(clienteId); if(!ct) return;
+  const mes=finMesStr();
+  const existing=getFatura(clienteId,mes);
+  const valor=parseFloat((val('ef_valor')||'0').replace(',','.'))||ct.valor;
+  const status=val('ef_status')||'pendente';
+  const dataPagamento=val('ef_datapag')||null;
+  const payload={cliente_id:clienteId,contrato_id:ct.id,mes,valor,status,data_pagamento:dataPagamento};
+  const {data:row,error}=await sb.from('faturas').upsert(payload,{onConflict:'cliente_id,mes'}).select().single();
+  if(error){ toast('Erro ao salvar cobrança'); return; }
+  if(existing) Object.assign(existing,mapFatura(row));
+  else data.faturas.push(mapFatura(row));
+  closeModal(); render(); toast('Cobrança atualizada','success');
+}
+
+function openEditDespesa(id){
+  const dep=data.despesas.find(x=>x.id===id); if(!dep) return;
+  modal(`<div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-divider"></div>
+    <div class="modal-title">Editar Despesa</div>
+    <div class="form-row"><label class="form-label">Item</label>
+      <input class="form-input" id="ed_item" value="${dep.item||''}">
+    </div>
+    <div class="form-row"><label class="form-label">Valor</label>
+      <input class="form-input" id="ed_valor" value="${dep.valor||''}">
+    </div>
+    <div class="form-row"><label class="form-label">Período</label>
+      <select class="form-input" id="ed_periodo">
+        <option ${dep.periodo==='Mensal'?'selected':''}>Mensal</option>
+        <option ${dep.periodo==='Único'?'selected':''}>Único</option>
+      </select>
+    </div>
+    <div class="form-row"><label class="form-label">Categoria</label>
+      <input class="form-input" id="ed_cat" value="${dep.categoria||''}">
+    </div>
+    <div class="form-row"><label class="form-label">Data de início</label>
+      <input class="form-input" type="date" id="ed_data" value="${dep.data||''}">
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn" onclick="saveEditDespesa('${id}')">Salvar</button>
+    </div>
+  </div>`);
+}
+
+async function saveEditDespesa(id){
+  const dep=data.despesas.find(x=>x.id===id); if(!dep) return;
+  const payload={item:val('ed_item')||dep.item,valor:parseFloat((val('ed_valor')||'0').replace(',','.'))||dep.valor,periodo:val('ed_periodo')||dep.periodo,categoria:val('ed_cat')||'',data:val('ed_data')||dep.data};
+  const {error}=await sb.from('despesas').update(payload).eq('id',id);
+  if(error){ toast('Erro ao atualizar despesa'); return; }
+  Object.assign(dep,{item:payload.item,valor:payload.valor,periodo:payload.periodo,categoria:payload.categoria,data:payload.data});
+  closeModal(); render(); toast('Despesa atualizada','success');
+}
+
 async function encerrarDespesa(id){
   const dep = data.despesas.find(x=>x.id===id); if(!dep) return;
   const hoje = new Date();

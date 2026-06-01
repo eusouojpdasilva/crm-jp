@@ -1744,8 +1744,8 @@ function renderFinanceiro(){
   // ── DESPESAS ──────────────────────────────────────────────────────────────
   // Exibe apenas despesas ativas (sem data_fim) + únicas do mês selecionado
   const despesasVisiveis = (data.despesas||[]).filter(dep=>{
-    if(dep.periodo==='Mensal') return !dep.dataFim; // ativas (não encerradas)
-    return dep.data && dep.data.startsWith(mes);    // únicas apenas do mês
+    if(dep.periodo==='Mensal') return !dep.dataFim && dep.data && dep.data.slice(0,7)<=mes;
+    return dep.data && dep.data.startsWith(mes);
   });
 
   h+=label('Despesas');

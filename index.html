@@ -1433,7 +1433,7 @@ function openTarefaForm(id){
       <div id="ckl-list" style="margin-bottom:8px"></div>
       <div style="display:flex;gap:8px">
         <input class="form-input" id="ckl-new" placeholder="Adicionar item..."
-          style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();_addCkl()}">
+          style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();event.stopPropagation();_addCkl()}">
         <button class="btn btn-ghost" style="padding:8px 16px;font-size:16px;line-height:1" onclick="_addCkl()">+</button>
       </div>
     </div>

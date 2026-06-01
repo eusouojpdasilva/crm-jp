@@ -1093,9 +1093,9 @@ function renderClientes(){
               <div><div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Recorrência</div>
                 <span style="font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:${vencido?'var(--text3)':recCor};border:1px solid ${vencido?'var(--border)':recCor+'44'};padding:2px 8px;border-radius:2px">${ct.recorrencia}</span></div>
               <div><div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Início</div>
-                <div style="font-size:12px;color:var(--text2)">${ct.dataInicio||'—'}</div></div>
+                <div style="font-size:12px;color:var(--text2)">${ct.dataInicio?new Date(ct.dataInicio+'T00:00:00').toLocaleDateString('pt-BR'):'—'}</div></div>
               <div><div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Vencimento</div>
-                <div style="font-size:12px;color:${vencido?'var(--red)':'var(--text2)'};font-weight:${vencido?'700':'400'}">${ct.vencimento||'—'}${diasDesdeVenc?` · ${diasDesdeVenc}`:''}</div></div>
+                <div style="font-size:12px;color:${vencido?'var(--red)':'var(--text2)'};font-weight:${vencido?'700':'400'}">${ct.vencimento?new Date(ct.vencimento+'T00:00:00').toLocaleDateString('pt-BR'):'—'}${diasDesdeVenc?` · ${diasDesdeVenc}`:''}</div></div>
             </div>`
           :`<div style="background:rgba(239,159,39,0.05);border-bottom:1px solid rgba(239,159,39,0.15);padding:10px 22px;font-size:13px;color:var(--amber);font-weight:700">
               ⚠ Sem contrato —

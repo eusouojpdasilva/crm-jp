@@ -397,6 +397,7 @@ textarea.form-input{resize:vertical;min-height:80px}
 <div class="topbar">
   <div class="logo">JP <span>CRM</span></div>
   <div class="tabs">
+    <button class="tab" id="tab-dashboard" onclick="switchTab('dashboard')">Dashboard</button>
     <button class="tab active" id="tab-pipeline" onclick="switchTab('pipeline')">Pipeline</button>
     <button class="tab" id="tab-clientes" onclick="switchTab('clientes')">Clientes</button>
     <button class="tab" id="tab-financeiro" onclick="switchTab('financeiro')">Financeiro</button>
@@ -501,7 +502,7 @@ const _meta = loadMeta();
 let data = { leads:[], clientes:[], contratos:[], faturas:[], despesas:[], metaMensal:_meta.metaMensal, currency:_meta.currency };
 
 // ─── FIELD MAPPING (DB snake_case → JS camelCase) ─────────────────────────────
-const mapLead    = r => ({id:r.id, nome:r.nome, nicho:r.nicho, proj:r.proj, status:r.status, valorEstimado:r.valor_estimado?String(r.valor_estimado):'', tipo:r.tipo, followup:r.followup, obs:r.obs, contatoData:r.contato_data, clienteId:r.cliente_id});
+const mapLead    = r => ({id:r.id, nome:r.nome, nicho:r.nicho, proj:r.proj, status:r.status, valorEstimado:r.valor_estimado?String(r.valor_estimado):'', tipo:r.tipo, followup:r.followup, obs:r.obs, contatoData:r.contato_data, clienteId:r.cliente_id, createdAt:r.created_at});
 const mapCliente = r => ({id:r.id, nome:r.nome, empresa:r.empresa, instagram:r.instagram, proj:r.proj, status:r.status, comoConheceu:r.como_conheceu, observacao:r.observacao, leadId:r.lead_id, av:r.av, createdAt:r.created_at, cidade:r.cidade||'', estado:r.estado||'', pais:r.pais||'Brasil'});
 const mapContrato= r => ({id:r.id, clienteId:r.cliente_id, valor:r.valor, recorrencia:r.recorrencia, dataInicio:r.data_inicio, vencimento:r.vencimento, status:r.status, moeda:r.moeda, diaVencimento:r.dia_vencimento||null});
 const mapFatura  = r => ({id:r.id, clienteId:r.cliente_id, contratoId:r.contrato_id, mes:r.mes, valor:r.valor, status:r.status, dataPagamento:r.data_pagamento});
@@ -623,9 +624,11 @@ function formatCurrency(v){ if(!v&&v!==0) return '—'; return new Intl.NumberFo
 // ─── ROTEAMENTO ───────────────────────────────────────────────────────────────
 function switchTab(t){
   tab=t;
-  ['pipeline','clientes','financeiro'].forEach(x=>document.getElementById('tab-'+x).classList.toggle('active',t===x));
-  const btns={pipeline:'+ Novo Lead',clientes:'+ Novo Cliente',financeiro:'+ Nova Despesa'};
-  document.getElementById('main-btn').textContent=btns[t]||'';
+  ['dashboard','pipeline','clientes','financeiro'].forEach(x=>document.getElementById('tab-'+x).classList.toggle('active',t===x));
+  const btns={dashboard:'',pipeline:'+ Novo Lead',clientes:'+ Novo Cliente',financeiro:'+ Nova Despesa'};
+  const btn=document.getElementById('main-btn');
+  btn.textContent=btns[t]||'';
+  btn.style.visibility=t==='dashboard'?'hidden':'visible';
   render();
 }
 function handleMainBtn(){
@@ -640,12 +643,186 @@ function setFilter(el,proj){
 }
 function filtered(arr){ return projFilter==='all'?arr:arr.filter(x=>x.proj===projFilter); }
 function render(){
-  if(tab==='pipeline') renderPipeline();
+  if(tab==='dashboard') renderDashboard();
+  else if(tab==='pipeline') renderPipeline();
   else if(tab==='clientes') renderClientes();
   else if(tab==='financeiro') renderFinanceiro();
 }
 
 // (helpers definidos acima)
+
+// ─── DASHBOARD ────────────────────────────────────────────────────────────────
+function renderDashboard(){
+  const hoje = new Date().toISOString().slice(0,10);
+  const mesAtual = hoje.slice(0,7);
+  const leads = filtered(data.leads);
+  const clientes = filtered(data.clientes);
+
+  // ── KPIs ──
+  const leadsAtivos = leads.filter(l=>l.status!=='perdido');
+  const emProposta  = leads.filter(l=>l.status==='proposta');
+  const clientesAtivos = clientes.filter(c=>!isClienteVencido(c));
+  const cliCobraveisMes = clientes.filter(c=>{
+    if((c.status||'').toLowerCase()!=='ativo') return false;
+    const ct=getContratoAtivo(c.id);
+    return ct && isCobravel(ct, mesAtual);
+  });
+  const recebidoMes = cliCobraveisMes
+    .filter(c=>statusEfetivo(c.id,mesAtual)==='pago')
+    .reduce((s,c)=>s+((getContratoAtivo(c.id)||{}).valor||0),0);
+
+  // ── FUNIL ──
+  const totalFunil = leadsAtivos.length || 1;
+  const funnelSteps = [
+    {label:'Novo',        key:'novo',     cor:'var(--text3)'},
+    {label:'Em Contato',  key:'contato',  cor:'var(--blue)'},
+    {label:'Proposta',    key:'proposta', cor:'var(--terra)'},
+    {label:'Fechado',     key:'fechado',  cor:'var(--green)'},
+  ];
+
+  // ── LEADS POR DIA DA SEMANA ──
+  const diasNomes = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const countByDay = [0,0,0,0,0,0,0];
+  leads.forEach(l=>{ if(l.createdAt){ countByDay[new Date(l.createdAt).getDay()]++; } });
+  const maxDay = Math.max(...countByDay)||1;
+
+  // ── SLA FOLLOW-UP ──
+  const leadsAbertos = leads.filter(l=>l.status!=='fechado'&&l.status!=='perdido');
+  const comFollowup  = leadsAbertos.filter(l=>l.followup);
+  const followupOk   = comFollowup.filter(l=>l.followup>=hoje);
+  const followupVenc = comFollowup.filter(l=>l.followup<hoje);
+  const semFollowup  = leadsAbertos.filter(l=>!l.followup);
+  const slaOkPct = leadsAbertos.length>0 ? Math.round((followupOk.length/leadsAbertos.length)*100) : 100;
+
+  // ── FILA DE RISCO ──
+  const filaRisco = leads
+    .filter(l=>(l.status==='novo'||l.status==='contato')&&l.followup&&l.followup<hoje)
+    .sort((a,b)=>a.followup.localeCompare(b.followup));
+
+  const secLabel = txt=>`<div style="font-size:9px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--text2);padding-bottom:14px;border-bottom:1px solid var(--border);margin-bottom:20px;display:flex;align-items:center;gap:12px"><span style="width:20px;height:1px;background:var(--terra);display:inline-block;flex-shrink:0;opacity:.8"></span>${txt}</div>`;
+
+  let h = '';
+
+  // ── 1. KPIs ──
+  h+=`<div class="stats" style="margin-bottom:32px">
+    <div class="stat"><span class="stat-label">Leads Ativos</span><div class="stat-value">${leadsAtivos.length}</div></div>
+    <div class="stat"><span class="stat-label">Em Proposta</span><div class="stat-value accent">${emProposta.length}</div></div>
+    <div class="stat"><span class="stat-label">Clientes Ativos</span><div class="stat-value">${clientesAtivos.length}</div></div>
+    <div class="stat"><span class="stat-label">Receita do Mês</span><div class="stat-value accent">${formatCurrency(recebidoMes)}</div></div>
+  </div>`;
+
+  // ── 2+3. Funil + Gráfico por dia ──
+  h+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">`;
+
+  // FUNIL DE CONVERSÃO
+  h+=`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:24px">
+    ${secLabel('Funil de Conversão')}`;
+  funnelSteps.forEach(step=>{
+    const cnt=leads.filter(l=>l.status===step.key).length;
+    const pct=Math.round((cnt/totalFunil)*100);
+    h+=`<div style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px">
+        <span style="font-size:11px;font-weight:700;color:var(--text2)">${step.label}</span>
+        <div style="display:flex;align-items:baseline;gap:10px">
+          <span style="font-size:22px;font-weight:900;letter-spacing:-0.5px;color:${step.cor}">${cnt}</span>
+          <span style="font-size:10px;color:var(--text3);width:34px;text-align:right">${pct}%</span>
+        </div>
+      </div>
+      <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden">
+        <div style="height:100%;width:${Math.max(pct,2)}%;background:${step.cor};border-radius:2px"></div>
+      </div>
+    </div>`;
+  });
+  const perdidos=leads.filter(l=>l.status==='perdido').length;
+  h+=`<div style="margin-top:4px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+    <span style="font-size:10px;color:var(--text3)">Perdidos</span>
+    <span style="font-size:14px;font-weight:800;color:var(--red)">${perdidos}</span>
+  </div></div>`;
+
+  // LEADS POR DIA DA SEMANA
+  const diasOrder=[1,2,3,4,5,6,0];
+  h+=`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:24px">
+    ${secLabel('Leads por Dia da Semana')}
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;height:110px;gap:6px;margin-bottom:10px">`;
+  diasOrder.forEach(d=>{
+    const cnt=countByDay[d];
+    const hPct=Math.round((cnt/maxDay)*100);
+    h+=`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px">
+      <span style="font-size:10px;font-weight:800;color:${cnt>0?'var(--text2)':'transparent'}">${cnt}</span>
+      <div style="width:100%;background:var(--border);border-radius:2px 2px 0 0;height:72px;display:flex;align-items:flex-end">
+        <div style="width:100%;height:${Math.max(hPct,3)}%;background:${cnt>0?'var(--terra)':'var(--bg3)'};border-radius:2px 2px 0 0"></div>
+      </div>
+      <span style="font-size:9px;font-weight:700;letter-spacing:0.5px;color:var(--text3);text-transform:uppercase">${diasNomes[d]}</span>
+    </div>`;
+  });
+  h+=`</div>
+    <div style="font-size:10px;color:var(--text3)">${leads.length} lead${leads.length!==1?'s':''} cadastrado${leads.length!==1?'s':''} no filtro atual</div>
+  </div>`;
+
+  h+=`</div>`; // fim grid 2 cols
+
+  // ── 4+5. SLA Follow-up + Fila de Risco ──
+  h+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">`;
+
+  // SLA FOLLOW-UP
+  h+=`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:24px">
+    ${secLabel('SLA de Follow-up')}
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:20px">
+      <div style="background:var(--bg3);padding:16px 12px;text-align:center">
+        <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Em dia</div>
+        <div style="font-size:26px;font-weight:900;color:var(--green)">${followupOk.length}</div>
+      </div>
+      <div style="background:var(--bg3);padding:16px 12px;text-align:center">
+        <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Vencido</div>
+        <div style="font-size:26px;font-weight:900;color:var(--red)">${followupVenc.length}</div>
+      </div>
+      <div style="background:var(--bg3);padding:16px 12px;text-align:center">
+        <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Sem data</div>
+        <div style="font-size:26px;font-weight:900;color:var(--amber)">${semFollowup.length}</div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span style="font-size:10px;color:var(--text3)">Follow-ups em dia (leads abertos)</span>
+      <span style="font-size:14px;font-weight:900;color:${slaOkPct>=70?'var(--green)':'var(--red)'}">${slaOkPct}%</span>
+    </div>
+    <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden">
+      <div style="height:100%;width:${slaOkPct}%;background:${slaOkPct>=70?'var(--green)':'var(--red)'};border-radius:2px"></div>
+    </div>
+    ${leadsAbertos.length===0?`<div style="margin-top:14px;font-size:10px;color:var(--text3)">Nenhum lead aberto no momento.</div>`:''}
+  </div>`;
+
+  // FILA DE RISCO
+  h+=`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:24px">
+    ${secLabel('Fila de Risco — Sem Retorno')}`;
+  if(filaRisco.length===0){
+    h+=`<div style="text-align:center;padding:32px 0;color:var(--text4)">
+      <div style="font-size:22px;margin-bottom:10px;opacity:.4">✓</div>
+      <div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase">Nenhum lead em risco</div>
+    </div>`;
+  } else {
+    h+=`<div style="display:flex;flex-direction:column;gap:8px">`;
+    filaRisco.slice(0,6).forEach(l=>{
+      const dias=Math.floor((new Date(hoje)-new Date(l.followup+'T00:00:00'))/86400000);
+      h+=`<div onclick="openLeadForm('${l.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 13px;background:var(--bg3);border:1px solid rgba(226,75,74,0.15);border-left:2px solid var(--red);border-radius:3px;cursor:pointer;transition:background .2s" onmouseover="this.style.background='var(--bg4)'" onmouseout="this.style.background='var(--bg3)'">
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px">${l.nome}</div>
+          <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">${ST_LABEL[l.status]||l.status}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:12px;font-weight:900;color:var(--red)">+${dias}d</div>
+          <div style="font-size:9px;color:var(--text3)">${new Date(l.followup+'T00:00:00').toLocaleDateString('pt-BR')}</div>
+        </div>
+      </div>`;
+    });
+    if(filaRisco.length>6) h+=`<div style="text-align:center;font-size:10px;color:var(--text3);padding:6px">+${filaRisco.length-6} mais</div>`;
+    h+=`</div>`;
+  }
+  h+=`</div>`;
+
+  h+=`</div>`; // fim grid 2 cols
+
+  document.getElementById('main-content').innerHTML=h;
+}
 
 // ─── PIPELINE ─────────────────────────────────────────────────────────────────
 function renderPipeline(){

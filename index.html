@@ -20,7 +20,7 @@
 /* NOISE TEXTURE OVERLAY */
 body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");opacity:0.028;pointer-events:none;z-index:0}
 
-body{background:var(--bg);color:var(--text);font-family:'Raleway',sans-serif;font-size:13px;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+body{background:var(--bg);color:var(--text);font-family:'Raleway',sans-serif;font-size:14px;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
 
 /* TOPBAR */
 .topbar{
@@ -41,7 +41,7 @@ body{background:var(--bg);color:var(--text);font-family:'Raleway',sans-serif;fon
 .tabs{display:flex;gap:2px}
 .tab{
   padding:8px 20px;border-radius:0;border:none;background:transparent;
-  color:var(--text3);font-family:'Raleway',sans-serif;font-size:10px;font-weight:700;
+  color:var(--text3);font-family:'Raleway',sans-serif;font-size:12px;font-weight:700;
   letter-spacing:2.5px;text-transform:uppercase;cursor:pointer;
   transition:all .25s ease;position:relative;
 }
@@ -57,7 +57,7 @@ body{background:var(--bg);color:var(--text);font-family:'Raleway',sans-serif;fon
   padding:8px 20px;border-radius:2px;
   border:1px solid var(--terra);background:transparent;
   color:var(--terra);font-family:'Raleway',sans-serif;
-  font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
   cursor:pointer;transition:all .25s ease;
 }
 .btn:hover{background:var(--terra);color:#fff}
@@ -75,12 +75,12 @@ body{background:var(--bg);color:var(--text);font-family:'Raleway',sans-serif;fon
   position:sticky;top:60px;z-index:49;
   backdrop-filter:blur(8px);
 }
-.filter-label{font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-right:4px}
+.filter-label{font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-right:4px}
 .pill{
   padding:5px 16px;border-radius:2px;
   border:1px solid var(--border2);background:transparent;
   color:var(--text2);font-family:'Raleway',sans-serif;
-  font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
   cursor:pointer;transition:all .25s ease;
 }
 .pill:hover:not(.active){border-color:#666;color:var(--text)}
@@ -96,7 +96,7 @@ body{background:var(--bg);color:var(--text);font-family:'Raleway',sans-serif;fon
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-bottom:40px;border:1px solid var(--border);border-radius:4px;overflow:hidden;background:var(--border)}
 .stat{background:var(--bg2);padding:28px 24px;position:relative;transition:background .2s}
 .stat:hover{background:var(--bg3)}
-.stat-label{font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);margin-bottom:14px;display:block}
+.stat-label{font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);margin-bottom:14px;display:block}
 .stat-value{font-size:36px;font-weight:900;line-height:1;letter-spacing:-1px;color:var(--text)}
 .stat-value.accent{color:var(--terra)}
 .stat:first-child::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--terra);opacity:0.6}
@@ -104,7 +104,7 @@ body{background:var(--bg);color:var(--text);font-family:'Raleway',sans-serif;fon
 /* SECTION HEADER */
 .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)}
 .section-title{
-  font-size:9px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--text2);
+  font-size:13px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--text2);
   display:flex;align-items:center;gap:12px;
 }
 .section-title::before{content:'';display:inline-block;width:20px;height:1px;background:var(--terra);opacity:0.8;flex-shrink:0}
@@ -120,9 +120,9 @@ body{background:var(--bg);color:var(--text);font-family:'Raleway',sans-serif;fon
   display:flex;align-items:center;justify-content:space-between;
   margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);
 }
-.col-title{font-size:8px;font-weight:700;letter-spacing:3px;text-transform:uppercase}
+.col-title{font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase}
 .col-count{
-  font-size:10px;font-weight:800;
+  font-size:12px;font-weight:800;
   background:var(--bg4);padding:2px 9px;border-radius:2px;color:var(--text2);
   letter-spacing:1px;
 }
@@ -159,22 +159,22 @@ body{background:var(--bg);color:var(--text);font-family:'Raleway',sans-serif;fon
   box-shadow:0 8px 24px rgba(0,0,0,0.5);
   background:var(--bg4);
 }
-.card-proj{font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.card-proj{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
 .card-name{font-size:13px;font-weight:800;margin-bottom:3px;color:var(--text);line-height:1.2}
-.card-nicho{font-size:11px;color:var(--text3);margin-bottom:10px;font-weight:500}
+.card-nicho{font-size:13px;color:var(--text3);margin-bottom:10px;font-weight:500}
 .card-footer{display:flex;align-items:center;justify-content:space-between}
 .card-value{font-size:13px;font-weight:800;color:var(--terra);letter-spacing:-0.3px}
-.card-date{font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase}
+.card-date{font-size:13px;color:var(--text3);letter-spacing:1px;text-transform:uppercase}
 .card-followup{
-  font-size:9px;color:var(--amber);font-weight:700;
+  font-size:13px;color:var(--amber);font-weight:700;
   padding:3px 7px;border-radius:2px;
   background:rgba(239,159,39,0.08);letter-spacing:0.5px;
   border:1px solid rgba(239,159,39,0.15);
 }
-.empty-col{color:var(--text4);font-size:10px;text-align:center;padding:28px 0;letter-spacing:2px;text-transform:uppercase}
+.empty-col{color:var(--text4);font-size:12px;text-align:center;padding:28px 0;letter-spacing:2px;text-transform:uppercase}
 
 /* BADGES */
-.badge{display:inline-block;font-size:8px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:3px 9px;border-radius:2px}
+.badge{display:inline-block;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:3px 9px;border-radius:2px}
 .badge-jp{color:#E8845A;background:rgba(194,107,58,0.18);border:1px solid rgba(194,107,58,0.35)}
 .badge-viaja{color:#4DD9A8;background:rgba(93,202,165,0.15);border:1px solid rgba(93,202,165,0.3)}
 .badge-nattiva{color:#7EC8F5;background:rgba(133,183,235,0.15);border:1px solid rgba(133,183,235,0.3)}
@@ -199,10 +199,10 @@ body{background:var(--bg);color:var(--text);font-family:'Raleway',sans-serif;fon
   border:1px solid rgba(255,255,255,0.08);
 }
 .client-name{font-size:15px;font-weight:800;margin-bottom:5px;color:var(--text);letter-spacing:-0.2px}
-.client-sub{font-size:10px;color:var(--text2);display:flex;align-items:center;gap:8px}
+.client-sub{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:8px}
 .client-body{padding:18px 22px;font-size:12px;color:var(--text3);line-height:1.7}
 .client-body strong{color:var(--text);font-weight:700}
-.tasks-header{font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
+.tasks-header{font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
 .task-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
 .task-item:last-child{border-bottom:none}
 .task-cb{
@@ -212,23 +212,23 @@ body{background:var(--bg);color:var(--text);font-family:'Raleway',sans-serif;fon
   display:flex;align-items:center;justify-content:center;transition:all .2s;
 }
 .task-cb.done{background:var(--terra);border-color:var(--terra)}
-.task-cb.done::after{content:'✓';color:#fff;font-size:10px;font-weight:800}
+.task-cb.done::after{content:'✓';color:#fff;font-size:12px;font-weight:800}
 .task-text{font-size:12px;font-weight:500;color:var(--text);line-height:1.4}
 .task-text.done{color:var(--text3);text-decoration:line-through}
-.task-due{font-size:10px;color:var(--text2);margin-top:2px}
+.task-due{font-size:12px;color:var(--text2);margin-top:2px}
 .task-due.overdue{color:var(--red)}
 .task-due.soon{color:var(--amber)}
 .add-task-row{
   width:100%;padding:8px;border:1px dashed var(--border2);background:transparent;
   color:var(--text4);font-family:'Raleway',sans-serif;
-  font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
   cursor:pointer;border-radius:2px;transition:all .22s;margin-top:10px;
 }
 .add-task-row:hover{border-color:var(--terra);color:var(--terra);background:var(--terra7)}
 
 /* FINANCEIRO TABLES */
 table thead tr th{
-  font-size:8px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+  font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
   color:var(--text2);padding:10px 10px !important;
   border-bottom:1px solid var(--border);
 }
@@ -261,7 +261,7 @@ table tbody tr:last-child td{border-bottom:none}
 }
 .form-row{margin-bottom:18px}
 .form-label{
-  font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;
+  font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;
   color:var(--text2);margin-bottom:8px;display:block;
 }
 .form-input{
@@ -283,7 +283,7 @@ textarea.form-input{resize:vertical;min-height:80px}
 /* EMPTY */
 .empty-state{text-align:center;padding:72px 20px;color:var(--text4)}
 .empty-icon{font-size:28px;margin-bottom:14px;opacity:0.4}
-.empty-text{font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text4)}
+.empty-text{font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text4)}
 
 /* DELETE AREA */
 .client-actions{display:flex;justify-content:flex-end;padding:0 22px 16px}
@@ -294,7 +294,7 @@ textarea.form-input{resize:vertical;min-height:80px}
   border-radius:4px;padding:20px 22px;margin-bottom:12px;
   display:flex;align-items:center;gap:24px;
 }
-.meta-box > div{font-size:11px;color:var(--text2)}
+.meta-box > div{font-size:13px;color:var(--text2)}
 .meta-box strong{color:var(--text);font-size:15px;font-weight:800}
 
 @media(max-width:900px){
@@ -337,7 +337,7 @@ textarea.form-input{resize:vertical;min-height:80px}
   color:var(--text);margin-bottom:8px;line-height:1.2;
 }
 .login-sub{
-  font-size:11px;font-weight:600;letter-spacing:2px;
+  font-size:13px;font-weight:600;letter-spacing:2px;
   text-transform:uppercase;color:var(--text3);margin-bottom:36px;
 }
 .login-input-wrap{position:relative;margin-bottom:12px}
@@ -355,12 +355,12 @@ textarea.form-input{resize:vertical;min-height:80px}
   width:100%;padding:13px;border-radius:4px;
   border:1px solid var(--terra);background:var(--terra15);
   color:var(--terra);font-family:'Raleway',sans-serif;
-  font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+  font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
   cursor:pointer;transition:all .25s ease;
 }
 .login-btn:hover{background:var(--terra);color:#fff}
 .login-error{
-  font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
   color:var(--red);margin-top:12px;min-height:18px;transition:opacity .2s;
 }
 @keyframes shake{
@@ -420,7 +420,7 @@ textarea.form-input{resize:vertical;min-height:80px}
     </select>
     <label class="filter-label">Meta Mensal</label>
     <input id="meta-input" class="form-input" style="width:140px;padding:6px 8px;border-radius:6px;font-size:12px" placeholder="0" onblur="saveMeta()" onkeydown="if(event.key==='Enter'){saveMeta();this.blur()}" />
-    <button class="btn" style="padding:6px 12px;font-size:10px" onclick="saveMeta()">OK</button>
+    <button class="btn" style="padding:6px 12px;font-size:12px" onclick="saveMeta()">OK</button>
   </div>
 </div>
 
@@ -519,7 +519,7 @@ function toast(msg, type='error'){
 
 // ─── LOADING ──────────────────────────────────────────────────────────────────
 function showLoading(){
-  document.getElementById('main-content').innerHTML=`<div style="text-align:center;padding:100px 0"><div style="font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--text3)">Carregando...</div></div>`;
+  document.getElementById('main-content').innerHTML=`<div style="text-align:center;padding:100px 0"><div style="font-size:12px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--text3)">Carregando...</div></div>`;
 }
 
 // ─── INIT — carrega tudo do Supabase ─────────────────────────────────────────
@@ -542,7 +542,7 @@ async function initData(){
     data.despesas = (d.data||[]).map(mapDespesa);
     render();
   }catch(e){
-    document.getElementById('main-content').innerHTML=`<div style="text-align:center;padding:100px 0"><div style="color:var(--red);font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase">Erro ao conectar com Supabase</div><div style="color:var(--text3);font-size:11px;margin-top:10px">${e.message}</div><button class="btn" style="margin-top:20px" onclick="initData()">Tentar novamente</button></div>`;
+    document.getElementById('main-content').innerHTML=`<div style="text-align:center;padding:100px 0"><div style="color:var(--red);font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase">Erro ao conectar com Supabase</div><div style="color:var(--text3);font-size:13px;margin-top:10px">${e.message}</div><button class="btn" style="margin-top:20px" onclick="initData()">Tentar novamente</button></div>`;
   }
 }
 
@@ -699,7 +699,7 @@ function renderDashboard(){
     .filter(l=>(l.status==='novo'||l.status==='contato')&&l.followup&&l.followup<hoje)
     .sort((a,b)=>a.followup.localeCompare(b.followup));
 
-  const secLabel = txt=>`<div style="font-size:9px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--text2);padding-bottom:14px;border-bottom:1px solid var(--border);margin-bottom:20px;display:flex;align-items:center;gap:12px"><span style="width:20px;height:1px;background:var(--terra);display:inline-block;flex-shrink:0;opacity:.8"></span>${txt}</div>`;
+  const secLabel = txt=>`<div style="font-size:13px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--text2);padding-bottom:14px;border-bottom:1px solid var(--border);margin-bottom:20px;display:flex;align-items:center;gap:12px"><span style="width:20px;height:1px;background:var(--terra);display:inline-block;flex-shrink:0;opacity:.8"></span>${txt}</div>`;
 
   let h = '';
 
@@ -722,10 +722,10 @@ function renderDashboard(){
     const pct=Math.round((cnt/totalFunil)*100);
     h+=`<div style="margin-bottom:16px">
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px">
-        <span style="font-size:11px;font-weight:700;color:var(--text2)">${step.label}</span>
+        <span style="font-size:13px;font-weight:700;color:var(--text2)">${step.label}</span>
         <div style="display:flex;align-items:baseline;gap:10px">
           <span style="font-size:22px;font-weight:900;letter-spacing:-0.5px;color:${step.cor}">${cnt}</span>
-          <span style="font-size:10px;color:var(--text3);width:34px;text-align:right">${pct}%</span>
+          <span style="font-size:12px;color:var(--text3);width:34px;text-align:right">${pct}%</span>
         </div>
       </div>
       <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden">
@@ -735,7 +735,7 @@ function renderDashboard(){
   });
   const perdidos=leads.filter(l=>l.status==='perdido').length;
   h+=`<div style="margin-top:4px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-    <span style="font-size:10px;color:var(--text3)">Perdidos</span>
+    <span style="font-size:12px;color:var(--text3)">Perdidos</span>
     <span style="font-size:14px;font-weight:800;color:var(--red)">${perdidos}</span>
   </div></div>`;
 
@@ -748,15 +748,15 @@ function renderDashboard(){
     const cnt=countByDay[d];
     const hPct=Math.round((cnt/maxDay)*100);
     h+=`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px">
-      <span style="font-size:10px;font-weight:800;color:${cnt>0?'var(--text2)':'transparent'}">${cnt}</span>
+      <span style="font-size:12px;font-weight:800;color:${cnt>0?'var(--text2)':'transparent'}">${cnt}</span>
       <div style="width:100%;background:var(--border);border-radius:2px 2px 0 0;height:72px;display:flex;align-items:flex-end">
         <div style="width:100%;height:${Math.max(hPct,3)}%;background:${cnt>0?'var(--terra)':'var(--bg3)'};border-radius:2px 2px 0 0"></div>
       </div>
-      <span style="font-size:9px;font-weight:700;letter-spacing:0.5px;color:var(--text3);text-transform:uppercase">${diasNomes[d]}</span>
+      <span style="font-size:13px;font-weight:700;letter-spacing:0.5px;color:var(--text3);text-transform:uppercase">${diasNomes[d]}</span>
     </div>`;
   });
   h+=`</div>
-    <div style="font-size:10px;color:var(--text3)">${leads.length} lead${leads.length!==1?'s':''} cadastrado${leads.length!==1?'s':''} no filtro atual</div>
+    <div style="font-size:12px;color:var(--text3)">${leads.length} lead${leads.length!==1?'s':''} cadastrado${leads.length!==1?'s':''} no filtro atual</div>
   </div>`;
 
   h+=`</div>`; // fim grid 2 cols
@@ -769,26 +769,26 @@ function renderDashboard(){
     ${secLabel('SLA de Follow-up')}
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:20px">
       <div style="background:var(--bg3);padding:16px 12px;text-align:center">
-        <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Em dia</div>
+        <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Em dia</div>
         <div style="font-size:26px;font-weight:900;color:var(--green)">${followupOk.length}</div>
       </div>
       <div style="background:var(--bg3);padding:16px 12px;text-align:center">
-        <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Vencido</div>
+        <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Vencido</div>
         <div style="font-size:26px;font-weight:900;color:var(--red)">${followupVenc.length}</div>
       </div>
       <div style="background:var(--bg3);padding:16px 12px;text-align:center">
-        <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Sem data</div>
+        <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Sem data</div>
         <div style="font-size:26px;font-weight:900;color:var(--amber)">${semFollowup.length}</div>
       </div>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <span style="font-size:10px;color:var(--text3)">Follow-ups em dia (leads abertos)</span>
+      <span style="font-size:12px;color:var(--text3)">Follow-ups em dia (leads abertos)</span>
       <span style="font-size:14px;font-weight:900;color:${slaOkPct>=70?'var(--green)':'var(--red)'}">${slaOkPct}%</span>
     </div>
     <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden">
       <div style="height:100%;width:${slaOkPct}%;background:${slaOkPct>=70?'var(--green)':'var(--red)'};border-radius:2px"></div>
     </div>
-    ${leadsAbertos.length===0?`<div style="margin-top:14px;font-size:10px;color:var(--text3)">Nenhum lead aberto no momento.</div>`:''}
+    ${leadsAbertos.length===0?`<div style="margin-top:14px;font-size:12px;color:var(--text3)">Nenhum lead aberto no momento.</div>`:''}
   </div>`;
 
   // FILA DE RISCO
@@ -797,7 +797,7 @@ function renderDashboard(){
   if(filaRisco.length===0){
     h+=`<div style="text-align:center;padding:32px 0;color:var(--text4)">
       <div style="font-size:22px;margin-bottom:10px;opacity:.4">✓</div>
-      <div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase">Nenhum lead em risco</div>
+      <div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase">Nenhum lead em risco</div>
     </div>`;
   } else {
     h+=`<div style="display:flex;flex-direction:column;gap:8px">`;
@@ -806,15 +806,15 @@ function renderDashboard(){
       h+=`<div onclick="openLeadForm('${l.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 13px;background:var(--bg3);border:1px solid rgba(226,75,74,0.15);border-left:2px solid var(--red);border-radius:3px;cursor:pointer;transition:background .2s" onmouseover="this.style.background='var(--bg4)'" onmouseout="this.style.background='var(--bg3)'">
         <div>
           <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px">${l.nome}</div>
-          <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">${ST_LABEL[l.status]||l.status}</div>
+          <div style="font-size:13px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">${ST_LABEL[l.status]||l.status}</div>
         </div>
         <div style="text-align:right">
           <div style="font-size:12px;font-weight:900;color:var(--red)">+${dias}d</div>
-          <div style="font-size:9px;color:var(--text3)">${new Date(l.followup+'T00:00:00').toLocaleDateString('pt-BR')}</div>
+          <div style="font-size:13px;color:var(--text3)">${new Date(l.followup+'T00:00:00').toLocaleDateString('pt-BR')}</div>
         </div>
       </div>`;
     });
-    if(filaRisco.length>6) h+=`<div style="text-align:center;font-size:10px;color:var(--text3);padding:6px">+${filaRisco.length-6} mais</div>`;
+    if(filaRisco.length>6) h+=`<div style="text-align:center;font-size:12px;color:var(--text3);padding:6px">+${filaRisco.length-6} mais</div>`;
     h+=`</div>`;
   }
   h+=`</div>`;
@@ -847,7 +847,7 @@ function renderPipeline(){
       h+=`<div class="card" draggable="true" ondragstart="event.dataTransfer.setData('text/plain','${l.id}')" onclick="openLeadForm('${l.id}')">
         <div class="card-proj">
           <span class="badge ${BADGE[l.proj]}">${PROJ[l.proj]}</span>
-          ${convertido?`<span style="margin-left:6px;font-size:8px;font-weight:800;color:var(--green);background:rgba(93,202,165,0.1);border:1px solid rgba(93,202,165,0.25);padding:2px 7px;border-radius:2px;letter-spacing:1px">✓ CLIENTE</span>`:''}
+          ${convertido?`<span style="margin-left:6px;font-size:12px;font-weight:800;color:var(--green);background:rgba(93,202,165,0.1);border:1px solid rgba(93,202,165,0.25);padding:2px 7px;border-radius:2px;letter-spacing:1px">✓ CLIENTE</span>`:''}
         </div>
         <div class="card-name">${l.nome}</div>
         <div class="card-nicho">${l.nicho||'&nbsp;'}</div>
@@ -857,7 +857,7 @@ function renderPipeline(){
         </div>
         <div class="card-footer">
           <span class="card-date">${l.contatoData||''}</span>
-          ${st==='fechado'&&!convertido?`<button class="btn" style="font-size:8px;padding:3px 9px" onclick="event.stopPropagation();openConvertLeadForm('${l.id}')">Converter →</button>`:''}
+          ${st==='fechado'&&!convertido?`<button class="btn" style="font-size:12px;padding:3px 9px" onclick="event.stopPropagation();openConvertLeadForm('${l.id}')">Converter →</button>`:''}
         </div>
       </div>`;
     });
@@ -883,7 +883,7 @@ function openLeadForm(id){
   modal(`<div class="modal" onclick="event.stopPropagation()">
     <div class="modal-divider"></div>
     <div class="modal-title">${l?'Editar Lead':'Novo Lead'}</div>
-    ${convertido?`<div style="background:rgba(93,202,165,0.08);border:1px solid rgba(93,202,165,0.2);border-radius:4px;padding:10px 14px;margin-bottom:20px;font-size:11px;color:var(--green);font-weight:700">✓ Lead já convertido em cliente</div>`:''}
+    ${convertido?`<div style="background:rgba(93,202,165,0.08);border:1px solid rgba(93,202,165,0.2);border-radius:4px;padding:10px 14px;margin-bottom:20px;font-size:13px;color:var(--green);font-weight:700">✓ Lead já convertido em cliente</div>`:''}
     <div class="form-row"><label class="form-label">Nome / Empresa</label><input class="form-input" id="fn" value="${l?l.nome:''}" placeholder="Ex: Ana Martins"></div>
     <div class="form-row"><label class="form-label">Nicho</label><input class="form-input" id="fni" value="${l?l.nicho||'':''}" placeholder="Ex: Clínica estética"></div>
     <div class="form-row"><label class="form-label">Projeto</label><select class="form-input" id="fp">${Object.keys(PROJ).map(p=>`<option value="${p}" ${l&&l.proj===p?'selected':''}>${PROJ[p]}</option>`).join('')}</select></div>
@@ -932,10 +932,10 @@ function openConvertLeadForm(leadId){
   modal(`<div class="modal" onclick="event.stopPropagation()">
     <div class="modal-divider"></div>
     <div class="modal-title">Converter em Cliente</div>
-    <div style="background:var(--terra7);border:1px solid rgba(194,107,58,0.2);border-radius:4px;padding:10px 14px;margin-bottom:20px;font-size:11px;color:var(--terra)">
+    <div style="background:var(--terra7);border:1px solid rgba(194,107,58,0.2);border-radius:4px;padding:10px 14px;margin-bottom:20px;font-size:13px;color:var(--terra)">
       Lead: <strong>${l.nome}</strong> · ${PROJ[l.proj]||l.proj} · ${l.tipo||''}
     </div>
-    <div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px">Dados do Cliente</div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px">Dados do Cliente</div>
     <div class="form-row"><label class="form-label">Nome completo</label><input class="form-input" id="c_nome" value="${l.nome}"></div>
     <div class="form-row"><label class="form-label">Empresa</label><input class="form-input" id="c_empresa" placeholder="Nome da empresa"></div>
     <div class="form-row"><label class="form-label">Instagram</label><input class="form-input" id="c_instagram" placeholder="@usuario"></div>
@@ -948,12 +948,12 @@ function openConvertLeadForm(leadId){
     </div>
     <div class="form-row"><label class="form-label">Origem</label><select class="form-input" id="c_conheceu">${ORIGENS.map(o=>`<option>${o}</option>`).join('')}</select></div>
     <div class="form-row"><label class="form-label">Observação</label><textarea class="form-input" id="c_obs">${l.obs||''}</textarea></div>
-    <div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px;margin-top:8px">Contrato</div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px;margin-top:8px">Contrato</div>
     <div class="form-row"><label class="form-label">Valor mensal / contratado</label><input class="form-input" id="ct_valor" value="${l.valorEstimado?l.valorEstimado.replace(/[^\d.,]/g,''):''}" placeholder="0.00"></div>
     <div class="form-row"><label class="form-label">Recorrência</label><select class="form-input" id="ct_recorrencia">${['Mensal','Trimestral','Anual','Pagamento Único'].map(o=>`<option>${o}</option>`).join('')}</select></div>
     <div class="form-row"><label class="form-label">Data de início</label><input class="form-input" type="date" id="ct_inicio" value="${hoje}"></div>
     <div class="form-row"><label class="form-label">Vencimento do contrato</label><input class="form-input" type="date" id="ct_vencimento"></div>
-    <div class="form-row"><label class="form-label">Dia do vencimento mensal</label>${selectDiaVencimento(null)}<div style="font-size:10px;color:var(--text3);margin-top:5px">Dia do mês em que o pagamento vence</div></div>
+    <div class="form-row"><label class="form-label">Dia do vencimento mensal</label>${selectDiaVencimento(null)}<div style="font-size:12px;color:var(--text3);margin-top:5px">Dia do mês em que o pagamento vence</div></div>
     <div class="form-actions">
       <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
       <button class="btn" style="border-color:var(--green);color:var(--green);background:rgba(93,202,165,0.08)" onclick="convertLead('${leadId}')">✓ Confirmar Conversão</button>
@@ -1006,14 +1006,14 @@ function renderClientes(){
   let h=`
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)">
     <div style="display:flex;gap:4px">
-      <button onclick="setClienteTab('ativos')" style="padding:7px 18px;border-radius:4px;border:1px solid ${clienteTab==='ativos'?'rgba(93,202,165,0.4)':'var(--border)'};background:${clienteTab==='ativos'?'rgba(93,202,165,0.08)':'transparent'};color:${clienteTab==='ativos'?'var(--green)':'var(--text3)'};font-family:'Raleway',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s">
-        Ativos <span style="margin-left:6px;background:${clienteTab==='ativos'?'rgba(93,202,165,0.15)':'var(--bg3)'};padding:1px 7px;border-radius:10px;font-size:10px">${ativos.length}</span>
+      <button onclick="setClienteTab('ativos')" style="padding:7px 18px;border-radius:4px;border:1px solid ${clienteTab==='ativos'?'rgba(93,202,165,0.4)':'var(--border)'};background:${clienteTab==='ativos'?'rgba(93,202,165,0.08)':'transparent'};color:${clienteTab==='ativos'?'var(--green)':'var(--text3)'};font-family:'Raleway',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s">
+        Ativos <span style="margin-left:6px;background:${clienteTab==='ativos'?'rgba(93,202,165,0.15)':'var(--bg3)'};padding:1px 7px;border-radius:10px;font-size:12px">${ativos.length}</span>
       </button>
-      <button onclick="setClienteTab('inativos')" style="padding:7px 18px;border-radius:4px;border:1px solid ${clienteTab==='inativos'?'rgba(226,75,74,0.4)':'var(--border)'};background:${clienteTab==='inativos'?'rgba(226,75,74,0.08)':'transparent'};color:${clienteTab==='inativos'?'var(--red)':'var(--text3)'};font-family:'Raleway',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s">
-        Inativos <span style="margin-left:6px;background:${clienteTab==='inativos'?'rgba(226,75,74,0.12)':'var(--bg3)'};padding:1px 7px;border-radius:10px;font-size:10px">${inativos.length}</span>
+      <button onclick="setClienteTab('inativos')" style="padding:7px 18px;border-radius:4px;border:1px solid ${clienteTab==='inativos'?'rgba(226,75,74,0.4)':'var(--border)'};background:${clienteTab==='inativos'?'rgba(226,75,74,0.08)':'transparent'};color:${clienteTab==='inativos'?'var(--red)':'var(--text3)'};font-family:'Raleway',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s">
+        Inativos <span style="margin-left:6px;background:${clienteTab==='inativos'?'rgba(226,75,74,0.12)':'var(--bg3)'};padding:1px 7px;border-radius:10px;font-size:12px">${inativos.length}</span>
       </button>
     </div>
-    <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3)">${todos.length} clientes no total</span>
+    <span style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3)">${todos.length} clientes no total</span>
   </div>`;
 
   if(!lista.length){
@@ -1045,30 +1045,30 @@ function renderClientes(){
             <div class="client-sub">
               <span class="badge ${BADGE[c.proj]}">${PROJ[c.proj]}</span>
               ${c.empresa?`<span>${c.empresa}</span>`:''}
-              ${lead?`<span style="font-size:8px;color:var(--terra);background:var(--terra7);border:1px solid rgba(194,107,58,0.2);padding:1px 6px;border-radius:2px">via pipeline</span>`:''}
-              ${vencido?`<span style="font-size:8px;color:var(--red);background:rgba(226,75,74,0.1);border:1px solid rgba(226,75,74,0.2);padding:1px 6px;border-radius:2px">● Inativo</span>`:''}
+              ${lead?`<span style="font-size:12px;color:var(--terra);background:var(--terra7);border:1px solid rgba(194,107,58,0.2);padding:1px 6px;border-radius:2px">via pipeline</span>`:''}
+              ${vencido?`<span style="font-size:12px;color:var(--red);background:rgba(226,75,74,0.1);border:1px solid rgba(226,75,74,0.2);padding:1px 6px;border-radius:2px">● Inativo</span>`:''}
             </div>
           </div>
-          <button class="btn ${vencido?'':'btn-ghost'}" style="font-size:9px;padding:4px 10px;${vencido?'border-color:var(--terra);color:var(--terra)':''}" onclick="openClienteEdit('${c.id}')">
+          <button class="btn ${vencido?'':'btn-ghost'}" style="font-size:13px;padding:4px 10px;${vencido?'border-color:var(--terra);color:var(--terra)':''}" onclick="openClienteEdit('${c.id}')">
             ${vencido?'Reativar':'Editar'}
           </button>
         </div>
         ${ct
           ?`<div style="background:var(--bg3);border-bottom:1px solid var(--border);padding:14px 22px;display:flex;gap:28px;align-items:center;flex-wrap:wrap">
-              <div><div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Contrato</div>
+              <div><div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Contrato</div>
                 <div style="font-size:22px;font-weight:900;letter-spacing:-0.5px;color:${vencido?'var(--text3)':'var(--terra)'}">${formatCurrency(ct.valor)}</div></div>
-              <div><div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Recorrência</div>
-                <span style="font-size:9px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:${vencido?'var(--text3)':recCor};border:1px solid ${vencido?'var(--border)':recCor+'44'};padding:2px 8px;border-radius:2px">${ct.recorrencia}</span></div>
-              <div><div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Início</div>
+              <div><div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Recorrência</div>
+                <span style="font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:${vencido?'var(--text3)':recCor};border:1px solid ${vencido?'var(--border)':recCor+'44'};padding:2px 8px;border-radius:2px">${ct.recorrencia}</span></div>
+              <div><div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Início</div>
                 <div style="font-size:12px;color:var(--text2)">${ct.dataInicio||'—'}</div></div>
-              <div><div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Vencimento</div>
+              <div><div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Vencimento</div>
                 <div style="font-size:12px;color:${vencido?'var(--red)':'var(--text2)'};font-weight:${vencido?'700':'400'}">${ct.vencimento||'—'}${diasDesdeVenc?` · ${diasDesdeVenc}`:''}</div></div>
             </div>`
-          :`<div style="background:rgba(239,159,39,0.05);border-bottom:1px solid rgba(239,159,39,0.15);padding:10px 22px;font-size:11px;color:var(--amber);font-weight:700">
+          :`<div style="background:rgba(239,159,39,0.05);border-bottom:1px solid rgba(239,159,39,0.15);padding:10px 22px;font-size:13px;color:var(--amber);font-weight:700">
               ⚠ Sem contrato —
-              <button onclick="openAddContratoForm('${c.id}')" style="background:none;border:none;color:var(--amber);text-decoration:underline;cursor:pointer;font-family:inherit;font-size:11px;font-weight:700;padding:0">Adicionar contrato</button>
+              <button onclick="openAddContratoForm('${c.id}')" style="background:none;border:none;color:var(--amber);text-decoration:underline;cursor:pointer;font-family:inherit;font-size:13px;font-weight:700;padding:0">Adicionar contrato</button>
             </div>`}
-        ${vencido?`<div style="background:rgba(194,107,58,0.05);border-bottom:1px solid rgba(194,107,58,0.12);padding:10px 22px;font-size:11px;color:var(--terra);font-weight:600">
+        ${vencido?`<div style="background:rgba(194,107,58,0.05);border-bottom:1px solid rgba(194,107,58,0.12);padding:10px 22px;font-size:13px;color:var(--terra);font-weight:600">
           Clique em <strong>Reativar</strong> para atualizar o contrato e reativar este cliente.
         </div>`:''}
         <div class="client-body">
@@ -1091,19 +1091,19 @@ function openClienteForm(){
   modal(`<div class="modal" onclick="event.stopPropagation()">
     <div class="modal-divider"></div>
     <div class="modal-title">Novo Cliente</div>
-    <div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px">Dados do Cliente</div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px">Dados do Cliente</div>
     <div class="form-row"><label class="form-label">Nome</label><input class="form-input" id="c_nome" placeholder="Ex: João Silva"></div>
     <div class="form-row"><label class="form-label">Empresa</label><input class="form-input" id="c_empresa"></div>
     <div class="form-row"><label class="form-label">Instagram</label><input class="form-input" id="c_instagram" placeholder="@usuario"></div>
     <div class="form-row"><label class="form-label">Projeto</label><select class="form-input" id="c_proj">${Object.keys(PROJ).map(p=>`<option value="${p}">${PROJ[p]}</option>`).join('')}</select></div>
     <div class="form-row"><label class="form-label">Origem</label><select class="form-input" id="c_conheceu">${ORIGENS.map(o=>`<option>${o}</option>`).join('')}</select></div>
     <div class="form-row"><label class="form-label">Observação</label><textarea class="form-input" id="c_obs"></textarea></div>
-    <div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px;margin-top:8px">Contrato</div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px;margin-top:8px">Contrato</div>
     <div class="form-row"><label class="form-label">Valor</label><input class="form-input" id="ct_valor" placeholder="0.00"></div>
     <div class="form-row"><label class="form-label">Recorrência</label><select class="form-input" id="ct_recorrencia">${['Mensal','Trimestral','Anual','Pagamento Único'].map(o=>`<option>${o}</option>`).join('')}</select></div>
     <div class="form-row"><label class="form-label">Data de início</label><input class="form-input" type="date" id="ct_inicio" value="${hoje}"></div>
     <div class="form-row"><label class="form-label">Vencimento do contrato</label><input class="form-input" type="date" id="ct_vencimento"></div>
-    <div class="form-row"><label class="form-label">Dia do vencimento mensal</label>${selectDiaVencimento(null)}<div style="font-size:10px;color:var(--text3);margin-top:5px">Dia do mês em que o pagamento vence</div></div>
+    <div class="form-row"><label class="form-label">Dia do vencimento mensal</label>${selectDiaVencimento(null)}<div style="font-size:12px;color:var(--text3);margin-top:5px">Dia do mês em que o pagamento vence</div></div>
     <div class="form-actions">
       <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
       <button class="btn" onclick="saveCliente()">Adicionar</button>
@@ -1134,7 +1134,7 @@ function openClienteEdit(id){
   modal(`<div class="modal" onclick="event.stopPropagation()">
     <div class="modal-divider"></div>
     <div class="modal-title">Editar Cliente</div>
-    <div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px">Dados do Cliente</div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px">Dados do Cliente</div>
     <div class="form-row"><label class="form-label">Nome</label><input class="form-input" id="c_nome" value="${c.nome}"></div>
     <div class="form-row"><label class="form-label">Empresa</label><input class="form-input" id="c_empresa" value="${c.empresa||''}"></div>
     <div class="form-row"><label class="form-label">Instagram</label><input class="form-input" id="c_instagram" value="${c.instagram||''}"></div>
@@ -1149,12 +1149,12 @@ function openClienteEdit(id){
     <div class="form-row"><label class="form-label">Projeto</label><select class="form-input" id="c_proj">${Object.keys(PROJ).map(p=>`<option value="${p}" ${c.proj===p?'selected':''}>${PROJ[p]}</option>`).join('')}</select></div>
     <div class="form-row"><label class="form-label">Origem</label><select class="form-input" id="c_conheceu">${ORIGENS.map(o=>`<option ${(c.comoConheceu||'').toLowerCase()===o.toLowerCase()?'selected':''}>${o}</option>`).join('')}</select></div>
     <div class="form-row"><label class="form-label">Observação</label><textarea class="form-input" id="c_obs">${c.observacao||''}</textarea></div>
-    <div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px;margin-top:8px">Contrato Ativo</div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px;margin-top:8px">Contrato Ativo</div>
     <div class="form-row"><label class="form-label">Valor</label><input class="form-input" id="ct_valor" value="${ct?ct.valor:''}" placeholder="0.00"></div>
     <div class="form-row"><label class="form-label">Recorrência</label><select class="form-input" id="ct_recorrencia">${['Mensal','Trimestral','Anual','Pagamento Único'].map(o=>`<option ${ct&&ct.recorrencia===o?'selected':''}>${o}</option>`).join('')}</select></div>
     <div class="form-row"><label class="form-label">Data de início</label><input class="form-input" type="date" id="ct_inicio" value="${ct?ct.dataInicio:''}"></div>
     <div class="form-row"><label class="form-label">Vencimento do contrato</label><input class="form-input" type="date" id="ct_vencimento" value="${ct?ct.vencimento:''}"></div>
-    <div class="form-row"><label class="form-label">Dia do vencimento mensal</label>${selectDiaVencimento(ct?ct.diaVencimento:null)}<div style="font-size:10px;color:var(--text3);margin-top:5px">Dia do mês em que o pagamento vence</div></div>
+    <div class="form-row"><label class="form-label">Dia do vencimento mensal</label>${selectDiaVencimento(ct?ct.diaVencimento:null)}<div style="font-size:12px;color:var(--text3);margin-top:5px">Dia do mês em que o pagamento vence</div></div>
     <div class="form-actions">
       <button class="btn btn-danger" onclick="deleteCliente('${id}')">Remover</button>
       <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
@@ -1339,33 +1339,33 @@ function renderFinanceiro(){
   // ── Formata input de valor ────────────────────────────────────────────────
   // formatCurrency já usa pt-BR (vírgula decimal)
 
-  const label = (txt) => `<div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:10px"><span style="width:18px;height:1px;background:var(--terra);display:inline-block"></span>${txt}</div>`;
+  const label = (txt) => `<div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:10px"><span style="width:18px;height:1px;background:var(--terra);display:inline-block"></span>${txt}</div>`;
 
   let h = `
   <!-- SELETOR -->
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px">
-    <span style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3)">Período</span>
+    <span style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3)">Período</span>
     <select onchange="setFinPeriodo(this.value.split('-')[0],this.value.split('-')[1])" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);font-family:'Raleway',sans-serif;font-size:12px;font-weight:700;padding:7px 14px;border-radius:4px;outline:none;cursor:pointer">${periodoOpts}</select>
-    <span style="font-size:11px;color:var(--text3)">${MESES[finMonth-1]} ${finYear}</span>
+    <span style="font-size:13px;color:var(--text3)">${MESES[finMonth-1]} ${finYear}</span>
   </div>
 
   <!-- ACUMULADO ANUAL -->
   ${label('Balanço Anual — '+finYear)}
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:28px">
     <div style="background:var(--bg2);padding:20px 22px;border-top:2px solid var(--green)">
-      <div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Receita Recebida</div>
+      <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Receita Recebida</div>
       <div style="font-size:28px;font-weight:900;letter-spacing:-1px;color:var(--green);margin-bottom:6px">${formatCurrency(receitaAnual)}</div>
-      <div style="font-size:10px;color:var(--text3)">${mesesComFatura} ${mesesComFatura===1?'mês':'meses'} com recebimento${metaAnual>0?` · ${metaAnualPct}% da meta anual`:''}</div>
+      <div style="font-size:12px;color:var(--text3)">${mesesComFatura} ${mesesComFatura===1?'mês':'meses'} com recebimento${metaAnual>0?` · ${metaAnualPct}% da meta anual`:''}</div>
     </div>
     <div style="background:var(--bg2);padding:20px 22px;border-top:2px solid var(--red)">
-      <div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Despesas Anuais</div>
+      <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Despesas Anuais</div>
       <div style="font-size:28px;font-weight:900;letter-spacing:-1px;color:var(--red);margin-bottom:6px">${formatCurrency(despesasAnual)}</div>
-      <div style="font-size:10px;color:var(--text3)">mensais × ${mesesPassados} meses + únicas do ano</div>
+      <div style="font-size:12px;color:var(--text3)">mensais × ${mesesPassados} meses + únicas do ano</div>
     </div>
     <div style="background:var(--bg2);padding:20px 22px;border-top:2px solid ${saldoAnual<0?'var(--red)':'var(--terra)'}">
-      <div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Saldo Anual</div>
+      <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Saldo Anual</div>
       <div style="font-size:28px;font-weight:900;letter-spacing:-1px;color:${saldoAnual<0?'var(--red)':'var(--terra)'};margin-bottom:6px">${formatCurrency(saldoAnual)}</div>
-      <div style="font-size:10px;color:var(--text3)">Receita − Despesas acumuladas</div>
+      <div style="font-size:12px;color:var(--text3)">Receita − Despesas acumuladas</div>
     </div>
   </div>
 
@@ -1375,13 +1375,13 @@ function renderFinanceiro(){
     <div style="position:absolute;top:0;left:0;bottom:0;width:${metaPct}%;background:${metaAtingida?'rgba(93,202,165,0.04)':'rgba(226,75,74,0.04)'};pointer-events:none"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;position:relative">
       <div>
-        <div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Meta do Mês</div>
+        <div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Meta do Mês</div>
         <div style="font-size:30px;font-weight:900;letter-spacing:-1px;color:${metaCor};line-height:1">${formatCurrency(meta)}</div>
       </div>
       <div style="text-align:right">
-        <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${metaCor};margin-bottom:4px">${meta===0?'Meta não definida':metaAtingida?'✓ Meta atingida':'✗ Abaixo da meta'}</div>
+        <div style="font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${metaCor};margin-bottom:4px">${meta===0?'Meta não definida':metaAtingida?'✓ Meta atingida':'✗ Abaixo da meta'}</div>
         <div style="font-size:26px;font-weight:900;color:${metaCor}">${meta>0?metaPct+'%':'—'}</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:2px">${meta>0?formatCurrency(totalRecebido)+' recebido no mês':''}</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px">${meta>0?formatCurrency(totalRecebido)+' recebido no mês':''}</div>
       </div>
     </div>
     ${meta>0?`<div style="margin-top:14px;height:3px;background:var(--border);border-radius:2px;overflow:hidden"><div style="height:100%;width:${metaPct}%;background:${metaAtingida?'var(--green)':'var(--red)'};border-radius:2px"></div></div>`:''}
@@ -1391,24 +1391,24 @@ function renderFinanceiro(){
   ${label('Balanço do Mês — '+MESES[finMonth-1]+' '+finYear)}
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:32px">
     <div style="background:var(--bg2);padding:22px 20px;border-top:2px solid var(--green)">
-      <div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Recebido</div>
+      <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Recebido</div>
       <div style="font-size:26px;font-weight:900;letter-spacing:-1px;color:var(--green);margin-bottom:8px">${formatCurrency(totalRecebido)}</div>
-      <div style="font-size:10px;color:var(--text3)">${recebido.length} cliente${recebido.length!==1?'s':''}</div>
+      <div style="font-size:12px;color:var(--text3)">${recebido.length} cliente${recebido.length!==1?'s':''}</div>
     </div>
     <div style="background:var(--bg2);padding:22px 20px;border-top:2px solid var(--blue)">
-      <div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">A Receber</div>
+      <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">A Receber</div>
       <div style="font-size:26px;font-weight:900;letter-spacing:-1px;color:var(--blue);margin-bottom:8px">${formatCurrency(totalAReceber)}</div>
-      <div style="font-size:10px;color:var(--text3)">${aReceber.length} cliente${aReceber.length!==1?'s':''}</div>
+      <div style="font-size:12px;color:var(--text3)">${aReceber.length} cliente${aReceber.length!==1?'s':''}</div>
     </div>
     <div style="background:var(--bg2);padding:22px 20px;border-top:2px solid var(--red)">
-      <div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Despesas</div>
+      <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Despesas</div>
       <div style="font-size:26px;font-weight:900;letter-spacing:-1px;color:var(--red);margin-bottom:8px">${formatCurrency(despesasMes)}</div>
-      <div style="font-size:10px;color:var(--text3)">${(data.despesas||[]).length} item${(data.despesas||[]).length!==1?'s':''} cadastrado${(data.despesas||[]).length!==1?'s':''}</div>
+      <div style="font-size:12px;color:var(--text3)">${(data.despesas||[]).length} item${(data.despesas||[]).length!==1?'s':''} cadastrado${(data.despesas||[]).length!==1?'s':''}</div>
     </div>
     <div style="background:var(--bg2);padding:22px 20px;border-top:2px solid ${saldoMes<0?'var(--red)':'var(--terra)'}">
-      <div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Saldo do Mês</div>
+      <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Saldo do Mês</div>
       <div style="font-size:26px;font-weight:900;letter-spacing:-1px;color:${saldoMes<0?'var(--red)':'var(--terra)'};margin-bottom:8px">${formatCurrency(saldoMes)}</div>
-      <div style="font-size:10px;color:var(--text3)">Recebido − Despesas</div>
+      <div style="font-size:12px;color:var(--text3)">Recebido − Despesas</div>
     </div>
   </div>`;
 
@@ -1423,13 +1423,13 @@ function renderFinanceiro(){
     h+=`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:32px">
       <table style="width:100%;border-collapse:collapse">
         <thead><tr style="background:var(--bg3)">
-          <th style="padding:13px 18px;text-align:left;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Cliente</th>
-          <th style="padding:13px 18px;text-align:left;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Empresa</th>
-          <th style="padding:13px 18px;text-align:left;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Valor</th>
-          <th style="padding:13px 18px;text-align:left;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Recorrência</th>
-          <th style="padding:13px 18px;text-align:left;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Vence</th>
-          <th style="padding:13px 18px;text-align:left;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Status</th>
-          <th style="padding:13px 18px;text-align:left;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Data Pag.</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Cliente</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Empresa</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Valor</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Recorrência</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Vence</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Status</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Data Pag.</th>
           <th style="padding:13px 18px;border-bottom:1px solid var(--border)"></th>
         </tr></thead><tbody>`;
     cliList.forEach(c=>{
@@ -1447,22 +1447,22 @@ function renderFinanceiro(){
       const recKey = (recLabel||'').toLowerCase();
       const recBadge = recKey.includes('mensal')?'var(--green)':recKey.includes('único')||recKey.includes('unico')?'var(--amber)':recKey.includes('trimestral')?'var(--blue)':recKey.includes('anual')?'#B07FEB':'var(--text2)';
       const acoes = stDisplay==='pago'
-        ? `<button class="btn btn-ghost" style="font-size:9px;padding:4px 10px" onclick="marcarPendente('${c.id}')">Desfazer</button>`
-        : `<button class="btn" style="font-size:9px;padding:4px 10px;border-color:var(--green);color:var(--green)" onclick="marcarPago('${c.id}')">Marcar Pago</button>
-           ${!vencAuto?`<button class="btn btn-danger" style="font-size:9px;padding:4px 10px;margin-left:4px" onclick="marcarVencido('${c.id}')">Vencido</button>`:''}
-           ${vencAuto?`<button class="btn btn-ghost" style="font-size:9px;padding:4px 10px;margin-left:4px" onclick="marcarPendente('${c.id}')">Ignorar</button>`:''}
+        ? `<button class="btn btn-ghost" style="font-size:13px;padding:4px 10px" onclick="marcarPendente('${c.id}')">Desfazer</button>`
+        : `<button class="btn" style="font-size:13px;padding:4px 10px;border-color:var(--green);color:var(--green)" onclick="marcarPago('${c.id}')">Marcar Pago</button>
+           ${!vencAuto?`<button class="btn btn-danger" style="font-size:13px;padding:4px 10px;margin-left:4px" onclick="marcarVencido('${c.id}')">Vencido</button>`:''}
+           ${vencAuto?`<button class="btn btn-ghost" style="font-size:13px;padding:4px 10px;margin-left:4px" onclick="marcarPendente('${c.id}')">Ignorar</button>`:''}
           `;
       h+=`<tr style="border-bottom:1px solid var(--border)">
         <td style="padding:15px 18px;font-size:13px;font-weight:700;color:var(--text)">${c.nome}</td>
         <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${c.empresa||'—'}</td>
         <td style="padding:15px 18px;font-size:14px;font-weight:800;color:var(--terra)">${formatCurrency(ctValor(c))}</td>
-        <td style="padding:15px 18px"><span style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${recBadge};border:1px solid ${recBadge}44;padding:2px 8px;border-radius:2px">${recLabel}</span></td>
+        <td style="padding:15px 18px"><span style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${recBadge};border:1px solid ${recBadge}44;padding:2px 8px;border-radius:2px">${recLabel}</span></td>
         <td style="padding:15px 18px;font-size:12px;color:${vencAuto?'var(--red)':'var(--text2)'};font-weight:${vencAuto?'700':'400'}">
           ${dataVencPag?`Dia ${String(diaVenc).padStart(2,'0')}${vencAuto?' ⚠':''}`:' —'}
         </td>
         <td style="padding:15px 18px">
-          <span style="font-size:9px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:${st.cor};background:${st.bg};border:1px solid ${st.brd};padding:3px 10px;border-radius:2px">${st.label}</span>
-          ${vencAuto?`<div style="font-size:9px;color:var(--red);margin-top:4px;font-weight:600">venceu em ${dataVencPag}</div>`:''}
+          <span style="font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:${st.cor};background:${st.bg};border:1px solid ${st.brd};padding:3px 10px;border-radius:2px">${st.label}</span>
+          ${vencAuto?`<div style="font-size:13px;color:var(--red);margin-top:4px;font-weight:600">venceu em ${dataVencPag}</div>`:''}
         </td>
         <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${fat&&fat.dataPagamento?fat.dataPagamento:'—'}</td>
         <td style="padding:15px 18px;text-align:right;white-space:nowrap">${acoes}</td>
@@ -1479,11 +1479,11 @@ function renderFinanceiro(){
     h+=`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;overflow:hidden">
       <table style="width:100%;border-collapse:collapse">
         <thead><tr style="background:var(--bg3)">
-          <th style="padding:13px 18px;text-align:left;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Item</th>
-          <th style="padding:13px 18px;text-align:left;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Valor</th>
-          <th style="padding:13px 18px;text-align:left;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Período</th>
-          <th style="padding:13px 18px;text-align:left;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Categoria</th>
-          <th style="padding:13px 18px;text-align:left;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Data</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Item</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Valor</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Período</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Categoria</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Data</th>
           <th style="padding:13px 18px;border-bottom:1px solid var(--border)"></th>
         </tr></thead><tbody>`+
       (data.despesas||[]).map(dep=>`<tr style="border-bottom:1px solid var(--border)">
@@ -1492,7 +1492,7 @@ function renderFinanceiro(){
         <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${dep.periodo}</td>
         <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${dep.categoria||'—'}</td>
         <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${dep.data||'—'}</td>
-        <td style="padding:15px 18px;text-align:right"><button class="btn btn-danger" style="font-size:9px;padding:4px 11px" onclick="deleteExpense('${dep.id}')">Remover</button></td>
+        <td style="padding:15px 18px;text-align:right"><button class="btn btn-danger" style="font-size:13px;padding:4px 11px" onclick="deleteExpense('${dep.id}')">Remover</button></td>
       </tr>`).join('')+
       `</tbody></table></div>`;
   } else {

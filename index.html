@@ -159,7 +159,7 @@ body{background:var(--bg);color:var(--text);font-family:'Raleway',sans-serif;fon
   box-shadow:0 8px 24px rgba(0,0,0,0.5);
   background:var(--bg4);
 }
-.card-proj{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.card-proj{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;flex-wrap:wrap;gap:6px}
 .card-name{font-size:13px;font-weight:800;margin-bottom:3px;color:var(--text);line-height:1.2}
 .card-nicho{font-size:13px;color:var(--text3);margin-bottom:10px;font-weight:500}
 .card-footer{display:flex;align-items:center;justify-content:space-between}
@@ -696,7 +696,7 @@ function renderDashboard(){
 
   // ── FILA DE RISCO ──
   const filaRisco = leads
-    .filter(l=>(l.status==='novo'||l.status==='contato')&&l.followup&&l.followup<hoje)
+    .filter(l=>(l.status==='novo'||l.status==='contato'||l.status==='proposta')&&l.followup&&l.followup<hoje)
     .sort((a,b)=>a.followup.localeCompare(b.followup));
 
   const secLabel = txt=>`<div style="font-size:13px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--text2);padding-bottom:14px;border-bottom:1px solid var(--border);margin-bottom:20px;display:flex;align-items:center;gap:12px"><span style="width:20px;height:1px;background:var(--terra);display:inline-block;flex-shrink:0;opacity:.8"></span>${txt}</div>`;
@@ -847,13 +847,13 @@ function renderPipeline(){
       h+=`<div class="card" draggable="true" ondragstart="event.dataTransfer.setData('text/plain','${l.id}')" onclick="openLeadForm('${l.id}')">
         <div class="card-proj">
           <span class="badge ${BADGE[l.proj]}">${PROJ[l.proj]}</span>
-          ${convertido?`<span style="margin-left:6px;font-size:12px;font-weight:800;color:var(--green);background:rgba(93,202,165,0.1);border:1px solid rgba(93,202,165,0.25);padding:2px 7px;border-radius:2px;letter-spacing:1px">✓ CLIENTE</span>`:''}
+          ${convertido?`<span style="font-size:12px;font-weight:800;color:var(--green);background:rgba(93,202,165,0.1);border:1px solid rgba(93,202,165,0.25);padding:2px 7px;border-radius:2px;letter-spacing:1px">✓ CLIENTE</span>`:''}
         </div>
         <div class="card-name">${l.nome}</div>
         <div class="card-nicho">${l.nicho||'&nbsp;'}</div>
         <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
           <div class="card-value">${l.valorEstimado||'—'}</div>
-          ${l.followup?`<div class="card-followup">↻ ${new Date(l.followup+'T00:00:00').toLocaleDateString('pt-BR')}</div>`:''}
+          ${l.followup&&st!=='fechado'?`<div class="card-followup">↻ ${new Date(l.followup+'T00:00:00').toLocaleDateString('pt-BR')}</div>`:''}
         </div>
         <div class="card-footer">
           <span class="card-date">${l.contatoData||''}</span>

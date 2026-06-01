@@ -533,7 +533,7 @@ let data = { leads:[], clientes:[], contratos:[], faturas:[], despesas:[], taref
 const mapLead    = r => ({id:r.id, nome:r.nome, nicho:r.nicho, proj:r.proj, status:r.status, valorEstimado:r.valor_estimado?String(r.valor_estimado):'', tipo:r.tipo, followup:r.followup, obs:r.obs, contatoData:r.contato_data, clienteId:r.cliente_id, createdAt:r.created_at});
 const mapTarefa  = r => ({id:r.id, clienteId:r.cliente_id, titulo:r.titulo, obs:r.obs||'', status:r.status||'a-fazer', dataInicio:r.data_inicio||'', dataEntrega:r.data_entrega||'', checklist:r.checklist||[], createdAt:r.created_at});
 const mapCliente = r => ({id:r.id, nome:r.nome, empresa:r.empresa, instagram:r.instagram, proj:r.proj, status:r.status, comoConheceu:r.como_conheceu, observacao:r.observacao, leadId:r.lead_id, av:r.av, createdAt:r.created_at, cidade:r.cidade||'', estado:r.estado||'', pais:r.pais||'Brasil'});
-const mapContrato= r => ({id:r.id, clienteId:r.cliente_id, valor:r.valor, recorrencia:r.recorrencia, dataInicio:r.data_inicio, vencimento:r.vencimento, status:r.status, moeda:r.moeda, diaVencimento:r.dia_vencimento||null});
+const mapContrato= r => ({id:r.id, clienteId:r.cliente_id, valor:r.valor, recorrencia:r.recorrencia, dataInicio:r.data_inicio, vencimento:r.vencimento, status:r.status, moeda:r.moeda, diaVencimento:r.dia_vencimento||null, numParcelas:r.num_parcelas||null});
 const mapFatura  = r => ({id:r.id, clienteId:r.cliente_id, contratoId:r.contrato_id, mes:r.mes, valor:r.valor, status:r.status, dataPagamento:r.data_pagamento});
 const mapDespesa = r => ({id:r.id, item:r.item, valor:r.valor, periodo:r.periodo, categoria:r.categoria, data:r.data, dataFim:r.data_fim||null});
 
@@ -629,10 +629,9 @@ function isCobravel(ct, mes){
   if(fim    && mes > fim)    return false;
 
   if(rec.includes('único') || rec.includes('unico') || rec === 'pagamento único'){
-    // Pagamento Único: SOMENTE no mês de início
     return mes === inicio;
   }
-  if(rec.includes('mensal'))      return true;
+  if(rec.includes('parcelado') || rec.includes('mensal')) return true;
   if(rec.includes('trimestral')){
     if(!inicio) return true;
     const [iy,im] = inicio.split('-').map(Number);
@@ -857,6 +856,53 @@ function renderDashboard(){
   document.getElementById('main-content').innerHTML=h;
 }
 
+// ─── HELPERS DE FORMULÁRIO DE CONTRATO ───────────────────────────────────────
+window._chkRec = function(){
+  const v = document.getElementById('ct_recorrencia')?.value;
+  const s = document.getElementById('ct_parc_sect');
+  if(s) s.style.display = v==='Parcelado'?'block':'none';
+  window._calcParc();
+};
+window._calcParc = function(){
+  const total = parseFloat((document.getElementById('ct_total')?.value||'').replace(',','.')) || 0;
+  const n     = parseInt(document.getElementById('ct_num_parcelas')?.value) || 0;
+  const info  = document.getElementById('ct_parc_info');
+  const inicio = document.getElementById('ct_inicio')?.value;
+  if(total>0 && n>0){
+    const parc = total/n;
+    if(info) info.innerHTML = `<strong>${n}x de ${formatCurrency(parc)}</strong> = ${formatCurrency(total)} no total`;
+    const valorEl = document.getElementById('ct_valor');
+    if(valorEl) valorEl.value = parc.toFixed(2);
+    if(inicio){
+      const d = new Date(inicio+'T00:00:00');
+      d.setMonth(d.getMonth()+n-1);
+      const lastDay = new Date(d.getFullYear(),d.getMonth()+1,0).toISOString().slice(0,10);
+      const vencEl = document.getElementById('ct_vencimento');
+      if(vencEl) vencEl.value = lastDay;
+    }
+  } else if(info) info.innerHTML='';
+};
+
+function _parceladoSection(numParcelas, valor){
+  return `<div id="ct_parc_sect" style="display:none;margin-bottom:18px;padding:14px;background:var(--bg3);border:1px solid var(--border);border-radius:4px">
+    <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">Configuração de Parcelas</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div><label class="form-label">Valor total do serviço</label>
+        <input class="form-input" id="ct_total" placeholder="0.00" oninput="window._calcParc()" value="${numParcelas&&valor?(numParcelas*valor).toFixed(2):''}">
+      </div>
+      <div><label class="form-label">Nº de parcelas</label>
+        <input class="form-input" id="ct_num_parcelas" type="number" min="2" max="60" placeholder="Ex: 3" oninput="window._calcParc()" value="${numParcelas||''}">
+      </div>
+    </div>
+    <div id="ct_parc_info" style="margin-top:8px;font-size:12px;color:var(--terra)"></div>
+  </div>`;
+}
+
+const RECORRENCIAS = ['Mensal','Trimestral','Anual','Pagamento Único','Parcelado'];
+function _recSelect(selected){
+  return `<select class="form-input" id="ct_recorrencia" onchange="window._chkRec()">${RECORRENCIAS.map(o=>`<option ${o===selected?'selected':''}>${o}</option>`).join('')}</select>`;
+}
+
 // ─── PIPELINE ─────────────────────────────────────────────────────────────────
 function renderPipeline(){
   // SUPABASE: await supabase.from('leads').select('*').order('created_at',{ascending:false})
@@ -982,8 +1028,9 @@ function openConvertLeadForm(leadId){
     <div class="form-row"><label class="form-label">Origem</label><select class="form-input" id="c_conheceu">${ORIGENS.map(o=>`<option>${o}</option>`).join('')}</select></div>
     <div class="form-row"><label class="form-label">Observação</label><textarea class="form-input" id="c_obs">${l.obs||''}</textarea></div>
     <div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px;margin-top:8px">Contrato</div>
-    <div class="form-row"><label class="form-label">Valor mensal / contratado</label><input class="form-input" id="ct_valor" value="${l.valorEstimado?l.valorEstimado.replace(/[^\d.,]/g,''):''}" placeholder="0.00"></div>
-    <div class="form-row"><label class="form-label">Recorrência</label><select class="form-input" id="ct_recorrencia">${['Mensal','Trimestral','Anual','Pagamento Único'].map(o=>`<option>${o}</option>`).join('')}</select></div>
+    <div class="form-row"><label class="form-label">Valor da parcela / mensal</label><input class="form-input" id="ct_valor" value="${l.valorEstimado?l.valorEstimado.replace(/[^\d.,]/g,''):''}" placeholder="0.00"></div>
+    <div class="form-row"><label class="form-label">Recorrência</label>${_recSelect('')}</div>
+    ${_parceladoSection(null,null)}
     <div class="form-row"><label class="form-label">Data de início</label><input class="form-input" type="date" id="ct_inicio" value="${hoje}"></div>
     <div class="form-row"><label class="form-label">Vencimento do contrato</label><input class="form-input" type="date" id="ct_vencimento"></div>
     <div class="form-row"><label class="form-label">Dia do vencimento mensal</label>${selectDiaVencimento(null)}<div style="font-size:12px;color:var(--text3);margin-top:5px">Dia do mês em que o pagamento vence</div></div>
@@ -992,6 +1039,7 @@ function openConvertLeadForm(leadId){
       <button class="btn" style="border-color:var(--green);color:var(--green);background:rgba(93,202,165,0.08)" onclick="convertLead('${leadId}')">✓ Confirmar Conversão</button>
     </div>
   </div>`);
+  setTimeout(window._chkRec,0);
 }
 
 async function convertLead(leadId){
@@ -1003,7 +1051,7 @@ async function convertLead(leadId){
   const {data:cRow,error:cErr}=await sb.from('clientes').insert({nome,empresa:val('c_empresa'),instagram:val('c_instagram'),proj:l.proj,status:'Ativo',como_conheceu:val('c_conheceu'),observacao:val('c_obs'),lead_id:leadId,av,cidade:val('c_cidade')||null,estado:val('c_estado')||null,pais:val('c_pais')||'Brasil'}).select().single();
   if(cErr){ toast('Erro ao criar cliente: '+cErr.message); return; }
 
-  const {data:ctRow,error:ctErr}=await sb.from('contratos').insert({cliente_id:cRow.id,valor,recorrencia:val('ct_recorrencia')||'Mensal',data_inicio:val('ct_inicio')||new Date().toISOString().slice(0,10),vencimento:val('ct_vencimento')||null,status:'Ativo',moeda:data.currency||'BRL',dia_vencimento:parseInt(val('ct_dia_venc'))||null}).select().single();
+  const {data:ctRow,error:ctErr}=await sb.from('contratos').insert({cliente_id:cRow.id,valor,recorrencia:val('ct_recorrencia')||'Mensal',data_inicio:val('ct_inicio')||new Date().toISOString().slice(0,10),vencimento:val('ct_vencimento')||null,status:'Ativo',moeda:data.currency||'BRL',dia_vencimento:parseInt(val('ct_dia_venc'))||null,num_parcelas:val('ct_recorrencia')==='Parcelado'?(parseInt(val('ct_num_parcelas'))||null):null}).select().single();
   if(ctErr){ toast('Erro ao criar contrato: '+ctErr.message); return; }
 
   await sb.from('leads').update({cliente_id:cRow.id}).eq('id',leadId);
@@ -1060,7 +1108,9 @@ function renderClientes(){
       const ct=getContratoAtivo(c.id);
       const lead=c.leadId?data.leads.find(l=>l.id===c.leadId):null;
       const vencido=isClienteVencido(c);
-      const recCor=ct?((ct.recorrencia||'').toLowerCase().includes('mensal')?'var(--green)':(ct.recorrencia||'').toLowerCase().includes('único')?'var(--amber)':'var(--blue)'):'var(--text3)';
+      const recRaw=(ct?.recorrencia||'').toLowerCase();
+      const recCor=ct?(recRaw.includes('mensal')||recRaw.includes('parcelado')?'var(--green)':recRaw.includes('único')?'var(--amber)':'var(--blue)'):'var(--text3)';
+      const recDisplay=ct?(ct.recorrencia==='Parcelado'&&ct.numParcelas?`Parcelado ${ct.numParcelas}x`:ct.recorrencia):'—';
 
       // Info de vencimento para inativos
       let diasDesdeVenc='';
@@ -1091,7 +1141,7 @@ function renderClientes(){
               <div><div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Contrato</div>
                 <div style="font-size:22px;font-weight:900;letter-spacing:-0.5px;color:${vencido?'var(--text3)':'var(--terra)'}">${formatCurrency(ct.valor)}</div></div>
               <div><div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Recorrência</div>
-                <span style="font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:${vencido?'var(--text3)':recCor};border:1px solid ${vencido?'var(--border)':recCor+'44'};padding:2px 8px;border-radius:2px">${ct.recorrencia}</span></div>
+                <span style="font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:${vencido?'var(--text3)':recCor};border:1px solid ${vencido?'var(--border)':recCor+'44'};padding:2px 8px;border-radius:2px">${recDisplay}</span></div>
               <div><div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Início</div>
                 <div style="font-size:12px;color:var(--text2)">${ct.dataInicio?new Date(ct.dataInicio+'T00:00:00').toLocaleDateString('pt-BR'):'—'}</div></div>
               <div><div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Vencimento</div>
@@ -1132,9 +1182,10 @@ function openClienteForm(){
     <div class="form-row"><label class="form-label">Origem</label><select class="form-input" id="c_conheceu">${ORIGENS.map(o=>`<option>${o}</option>`).join('')}</select></div>
     <div class="form-row"><label class="form-label">Observação</label><textarea class="form-input" id="c_obs"></textarea></div>
     <div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px;margin-top:8px">Contrato</div>
-    <div class="form-row"><label class="form-label">Valor</label><input class="form-input" id="ct_valor" placeholder="0.00"></div>
-    <div class="form-row"><label class="form-label">Recorrência</label><select class="form-input" id="ct_recorrencia">${['Mensal','Trimestral','Anual','Pagamento Único'].map(o=>`<option>${o}</option>`).join('')}</select></div>
-    <div class="form-row"><label class="form-label">Data de início</label><input class="form-input" type="date" id="ct_inicio" value="${hoje}"></div>
+    <div class="form-row"><label class="form-label">Valor da parcela / mensal</label><input class="form-input" id="ct_valor" placeholder="0.00"></div>
+    <div class="form-row"><label class="form-label">Recorrência</label>${_recSelect('')}</div>
+    ${_parceladoSection(null,null)}
+    <div class="form-row"><label class="form-label">Data de início</label><input class="form-input" type="date" id="ct_inicio" value="${hoje}" oninput="window._calcParc()"></div>
     <div class="form-row"><label class="form-label">Vencimento do contrato</label><input class="form-input" type="date" id="ct_vencimento"></div>
     <div class="form-row"><label class="form-label">Dia do vencimento mensal</label>${selectDiaVencimento(null)}<div style="font-size:12px;color:var(--text3);margin-top:5px">Dia do mês em que o pagamento vence</div></div>
     <div class="form-actions">
@@ -1154,14 +1205,13 @@ async function saveCliente(){
   data.clientes.unshift(mapCliente(cRow));
 
   if(valor>0){
-    const {data:ctRow,error:ctErr}=await sb.from('contratos').insert({cliente_id:cRow.id,valor,recorrencia:val('ct_recorrencia')||'Mensal',data_inicio:val('ct_inicio')||new Date().toISOString().slice(0,10),vencimento:val('ct_vencimento')||null,status:'Ativo',moeda:data.currency||'BRL',dia_vencimento:parseInt(val('ct_dia_venc'))||null}).select().single();
+    const {data:ctRow,error:ctErr}=await sb.from('contratos').insert({cliente_id:cRow.id,valor,recorrencia:val('ct_recorrencia')||'Mensal',data_inicio:val('ct_inicio')||new Date().toISOString().slice(0,10),vencimento:val('ct_vencimento')||null,status:'Ativo',moeda:data.currency||'BRL',dia_vencimento:parseInt(val('ct_dia_venc'))||null,num_parcelas:val('ct_recorrencia')==='Parcelado'?(parseInt(val('ct_num_parcelas'))||null):null}).select().single();
     if(!ctErr) data.contratos.push(mapContrato(ctRow));
   }
   closeModal(); render(); toast('Cliente adicionado!','success');
 }
 
 function openClienteEdit(id){
-  // SUPABASE: await supabase.from('clientes').select('*,contratos(*)').eq('id',id).single()
   const c=data.clientes.find(x=>x.id===id); if(!c) return;
   const ct=getContratoAtivo(id);
   modal(`<div class="modal" onclick="event.stopPropagation()">
@@ -1183,9 +1233,10 @@ function openClienteEdit(id){
     <div class="form-row"><label class="form-label">Origem</label><select class="form-input" id="c_conheceu">${ORIGENS.map(o=>`<option ${(c.comoConheceu||'').toLowerCase()===o.toLowerCase()?'selected':''}>${o}</option>`).join('')}</select></div>
     <div class="form-row"><label class="form-label">Observação</label><textarea class="form-input" id="c_obs">${c.observacao||''}</textarea></div>
     <div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px;margin-top:8px">Contrato Ativo</div>
-    <div class="form-row"><label class="form-label">Valor</label><input class="form-input" id="ct_valor" value="${ct?ct.valor:''}" placeholder="0.00"></div>
-    <div class="form-row"><label class="form-label">Recorrência</label><select class="form-input" id="ct_recorrencia">${['Mensal','Trimestral','Anual','Pagamento Único'].map(o=>`<option ${ct&&ct.recorrencia===o?'selected':''}>${o}</option>`).join('')}</select></div>
-    <div class="form-row"><label class="form-label">Data de início</label><input class="form-input" type="date" id="ct_inicio" value="${ct?ct.dataInicio:''}"></div>
+    <div class="form-row"><label class="form-label">Valor da parcela / mensal</label><input class="form-input" id="ct_valor" value="${ct?ct.valor:''}" placeholder="0.00"></div>
+    <div class="form-row"><label class="form-label">Recorrência</label>${_recSelect(ct?ct.recorrencia:'')}</div>
+    ${_parceladoSection(ct?ct.numParcelas:null, ct?ct.valor:null)}
+    <div class="form-row"><label class="form-label">Data de início</label><input class="form-input" type="date" id="ct_inicio" value="${ct?ct.dataInicio:''}" oninput="window._calcParc()"></div>
     <div class="form-row"><label class="form-label">Vencimento do contrato</label><input class="form-input" type="date" id="ct_vencimento" value="${ct?ct.vencimento:''}"></div>
     <div class="form-row"><label class="form-label">Dia do vencimento mensal</label>${selectDiaVencimento(ct?ct.diaVencimento:null)}<div style="font-size:12px;color:var(--text3);margin-top:5px">Dia do mês em que o pagamento vence</div></div>
     <div class="form-actions">
@@ -1194,6 +1245,7 @@ function openClienteEdit(id){
       <button class="btn" onclick="updateCliente('${id}')">Salvar</button>
     </div>
   </div>`);
+  setTimeout(window._chkRec, 0);
 }
 
 async function updateCliente(id){
@@ -1215,9 +1267,11 @@ async function updateCliente(id){
   let ct=getContratoAtivo(id);
   if(ct){
     const diaVenc=parseInt(val('ct_dia_venc'))||null;
-    const ctP={valor,recorrencia:val('ct_recorrencia')||ct.recorrencia,data_inicio:val('ct_inicio')||ct.dataInicio,vencimento:novoVencimento,dia_vencimento:diaVenc};
+    const recNew=val('ct_recorrencia')||ct.recorrencia;
+    const numParc=recNew==='Parcelado'?(parseInt(val('ct_num_parcelas'))||null):null;
+    const ctP={valor,recorrencia:recNew,data_inicio:val('ct_inicio')||ct.dataInicio,vencimento:novoVencimento,dia_vencimento:diaVenc,num_parcelas:numParc};
     await sb.from('contratos').update(ctP).eq('id',ct.id);
-    Object.assign(ct,{valor,recorrencia:ctP.recorrencia,dataInicio:ctP.data_inicio,vencimento:ctP.vencimento,diaVencimento:diaVenc});
+    Object.assign(ct,{valor,recorrencia:ctP.recorrencia,dataInicio:ctP.data_inicio,vencimento:ctP.vencimento,diaVencimento:diaVenc,numParcelas:numParc});
   } else if(valor>0){
     const {data:ctRow}=await sb.from('contratos').insert({cliente_id:id,valor,recorrencia:val('ct_recorrencia')||'Mensal',data_inicio:val('ct_inicio'),vencimento:novoVencimento,status:'Ativo',moeda:data.currency||'BRL',dia_vencimento:parseInt(val('ct_dia_venc'))||null}).select().single();
     if(ctRow) data.contratos.push(mapContrato(ctRow));
@@ -1246,9 +1300,10 @@ function openAddContratoForm(clienteId){
   modal(`<div class="modal" onclick="event.stopPropagation()">
     <div class="modal-divider"></div>
     <div class="modal-title">Novo Contrato</div>
-    <div class="form-row"><label class="form-label">Valor</label><input class="form-input" id="ct_valor" placeholder="0.00"></div>
-    <div class="form-row"><label class="form-label">Recorrência</label><select class="form-input" id="ct_recorrencia">${['Mensal','Trimestral','Anual','Pagamento Único'].map(o=>`<option>${o}</option>`).join('')}</select></div>
-    <div class="form-row"><label class="form-label">Data de início</label><input class="form-input" type="date" id="ct_inicio" value="${hoje}"></div>
+    <div class="form-row"><label class="form-label">Valor da parcela / mensal</label><input class="form-input" id="ct_valor" placeholder="0.00"></div>
+    <div class="form-row"><label class="form-label">Recorrência</label>${_recSelect('')}</div>
+    ${_parceladoSection(null,null)}
+    <div class="form-row"><label class="form-label">Data de início</label><input class="form-input" type="date" id="ct_inicio" value="${hoje}" oninput="window._calcParc()"></div>
     <div class="form-row"><label class="form-label">Vencimento do contrato</label><input class="form-input" type="date" id="ct_vencimento"></div>
     <div class="form-row"><label class="form-label">Dia do vencimento mensal</label>${selectDiaVencimento(null)}</div>
     <div class="form-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn" onclick="saveContrato('${clienteId}')">Salvar</button></div>
@@ -1449,8 +1504,7 @@ function openTarefaForm(id){
       <button class="btn" onclick="${t?`updateTarefa('${t.id}')`:'saveTarefa()'}">${t?'Salvar':'Adicionar'}</button>
     </div>
   </div>`);
-  // renderiza checklist inicial
-  setTimeout(_renderCkl,0);
+  setTimeout(()=>{ _renderCkl(); window._chkRec(); },0);
 }
 
 async function saveTarefa(){
@@ -1539,14 +1593,16 @@ function renderFinanceiro(){
   });
 
   const ctValor = c => (getContratoAtivo(c.id)||{}).valor||0;
+  // usa valor da fatura quando disponível (editado ou parcelado customizado)
+  const efValor = c => { const f=getFatura(c.id,mes); return (f&&f.valor)?f.valor:ctValor(c); };
 
   // ── Mês selecionado — usa statusEfetivo (inclui vencimento automático por dia) ──
   const recebido  = cliList.filter(c=> statusEfetivo(c.id,mes)==='pago');
   const vencidoList= cliList.filter(c=>{ const s=statusEfetivo(c.id,mes); return s==='vencido'||s==='vencido-auto'; });
   const aReceber  = cliList.filter(c=> statusEfetivo(c.id,mes)==='pendente');
-  const totalRecebido = recebido.reduce((s,c)=>s+ctValor(c),0);
-  const totalVencido  = vencidoList.reduce((s,c)=>s+ctValor(c),0);
-  const totalAReceber = aReceber.reduce((s,c)=>s+ctValor(c),0);
+  const totalRecebido = recebido.reduce((s,c)=>s+efValor(c),0);
+  const totalVencido  = vencidoList.reduce((s,c)=>s+efValor(c),0);
+  const totalAReceber = aReceber.reduce((s,c)=>s+efValor(c),0);
 
   const despesaAtivaNoMes = (dep, m) => {
     const inicio = dep.data ? dep.data.slice(0,7) : null;
@@ -1724,7 +1780,7 @@ function renderFinanceiro(){
       h+=`<tr style="border-bottom:1px solid var(--border)">
         <td style="padding:15px 18px;font-size:13px;font-weight:700;color:var(--text)">${c.nome}</td>
         <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${c.empresa||'—'}</td>
-        <td style="padding:15px 18px;font-size:14px;font-weight:800;color:var(--terra)">${formatCurrency(ctValor(c))}</td>
+        <td style="padding:15px 18px;font-size:14px;font-weight:800;color:var(--terra)">${formatCurrency(efValor(c))}</td>
         <td style="padding:15px 18px"><span style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${recBadge};border:1px solid ${recBadge}44;padding:2px 8px;border-radius:2px">${recLabel}</span></td>
         <td style="padding:15px 18px;font-size:12px;color:${vencAuto?'var(--red)':'var(--text2)'};font-weight:${vencAuto?'700':'400'}">
           ${dataVencPag?`Dia ${String(diaVenc).padStart(2,'0')}${vencAuto?' ⚠':''}`:' —'}

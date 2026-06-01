@@ -127,7 +127,7 @@ body{background:var(--bg);color:var(--text);font-family:'Raleway',sans-serif;fon
   letter-spacing:1px;
 }
 
-/* Column status accents */
+/* Column status accents — Pipeline */
 .st-novo{border-top:2px solid var(--text4)}
 .st-contato{border-top:2px solid var(--blue)}
 .st-proposta{border-top:2px solid var(--terra)}
@@ -139,12 +139,36 @@ body{background:var(--bg);color:var(--text);font-family:'Raleway',sans-serif;fon
 .st-fechado .col-title{color:var(--green)}
 .st-perdido .col-title{color:var(--red)}
 
-/* Kanban card border-left by status */
+/* Kanban card border-left — Pipeline */
 .st-novo .card{border-left:2px solid var(--border2)}
 .st-contato .card{border-left:2px solid rgba(133,183,235,0.4)}
 .st-proposta .card{border-left:2px solid rgba(194,107,58,0.5)}
 .st-fechado .card{border-left:2px solid rgba(93,202,165,0.5)}
 .st-perdido .card{border-left:2px solid rgba(226,75,74,0.3)}
+
+/* Column status accents — Tarefas */
+.ts-a-fazer{border-top:2px solid var(--text4)}
+.ts-andamento{border-top:2px solid var(--blue)}
+.ts-revisao{border-top:2px solid var(--amber)}
+.ts-concluido{border-top:2px solid var(--green)}
+.ts-a-fazer .col-title{color:var(--text3)}
+.ts-andamento .col-title{color:var(--blue)}
+.ts-revisao .col-title{color:var(--amber)}
+.ts-concluido .col-title{color:var(--green)}
+
+/* Kanban card border-left — Tarefas */
+.ts-a-fazer .card{border-left:2px solid var(--border2)}
+.ts-andamento .card{border-left:2px solid rgba(133,183,235,0.4)}
+.ts-revisao .card{border-left:2px solid rgba(239,159,39,0.4)}
+.ts-concluido .card{border-left:2px solid rgba(93,202,165,0.5)}
+
+/* Checklist item no card */
+.ckl-item{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.ckl-item:last-child{border-bottom:none}
+.ckl-cb{width:16px;height:16px;border-radius:3px;border:1px solid var(--border2);background:transparent;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.ckl-cb.done{background:var(--terra);border-color:var(--terra)}
+.ckl-text{font-size:12px;color:var(--text);line-height:1.3}
+.ckl-text.done{color:var(--text3);text-decoration:line-through}
 
 .card{
   background:var(--bg3);
@@ -400,6 +424,7 @@ textarea.form-input{resize:vertical;min-height:80px}
     <button class="tab" id="tab-dashboard" onclick="switchTab('dashboard')">Dashboard</button>
     <button class="tab active" id="tab-pipeline" onclick="switchTab('pipeline')">Pipeline</button>
     <button class="tab" id="tab-clientes" onclick="switchTab('clientes')">Clientes</button>
+    <button class="tab" id="tab-tarefas" onclick="switchTab('tarefas')">Tarefas</button>
     <button class="tab" id="tab-financeiro" onclick="switchTab('financeiro')">Financeiro</button>
   </div>
   <button class="btn" id="main-btn" onclick="handleMainBtn()">+ Novo Lead</button>
@@ -487,6 +512,9 @@ const AV_BG = {jp:'rgba(194,107,58,0.2)', viaja:'rgba(93,202,165,0.18)', nattiva
 const AV_COLOR = {jp:'#C26B3A', viaja:'#5DCAA5', nattiva:'#85B7EB'};
 const STATUSES = ['novo','contato','proposta','fechado','perdido'];
 const ST_LABEL = {novo:'Novo',contato:'Em Contato',proposta:'Proposta',fechado:'Fechado',perdido:'Perdido'};
+const TASK_STATUSES = ['a-fazer','andamento','revisao','concluido'];
+const TASK_LABEL = {'a-fazer':'A Fazer','andamento':'Em Andamento','revisao':'Em Revisão','concluido':'Concluído'};
+const TASK_COR   = {'a-fazer':'var(--text3)','andamento':'var(--blue)','revisao':'var(--amber)','concluido':'var(--green)'};
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
 let tab = 'pipeline';
@@ -499,10 +527,11 @@ function persistMeta(){ localStorage.setItem(META_KEY, JSON.stringify({metaMensa
 
 // ─── CACHE LOCAL (runtime) ────────────────────────────────────────────────────
 const _meta = loadMeta();
-let data = { leads:[], clientes:[], contratos:[], faturas:[], despesas:[], metaMensal:_meta.metaMensal, currency:_meta.currency };
+let data = { leads:[], clientes:[], contratos:[], faturas:[], despesas:[], tarefas:[], metaMensal:_meta.metaMensal, currency:_meta.currency };
 
 // ─── FIELD MAPPING (DB snake_case → JS camelCase) ─────────────────────────────
 const mapLead    = r => ({id:r.id, nome:r.nome, nicho:r.nicho, proj:r.proj, status:r.status, valorEstimado:r.valor_estimado?String(r.valor_estimado):'', tipo:r.tipo, followup:r.followup, obs:r.obs, contatoData:r.contato_data, clienteId:r.cliente_id, createdAt:r.created_at});
+const mapTarefa  = r => ({id:r.id, clienteId:r.cliente_id, titulo:r.titulo, obs:r.obs||'', status:r.status||'a-fazer', dataInicio:r.data_inicio||'', dataEntrega:r.data_entrega||'', checklist:r.checklist||[], createdAt:r.created_at});
 const mapCliente = r => ({id:r.id, nome:r.nome, empresa:r.empresa, instagram:r.instagram, proj:r.proj, status:r.status, comoConheceu:r.como_conheceu, observacao:r.observacao, leadId:r.lead_id, av:r.av, createdAt:r.created_at, cidade:r.cidade||'', estado:r.estado||'', pais:r.pais||'Brasil'});
 const mapContrato= r => ({id:r.id, clienteId:r.cliente_id, valor:r.valor, recorrencia:r.recorrencia, dataInicio:r.data_inicio, vencimento:r.vencimento, status:r.status, moeda:r.moeda, diaVencimento:r.dia_vencimento||null});
 const mapFatura  = r => ({id:r.id, clienteId:r.cliente_id, contratoId:r.contrato_id, mes:r.mes, valor:r.valor, status:r.status, dataPagamento:r.data_pagamento});
@@ -526,12 +555,13 @@ function showLoading(){
 async function initData(){
   showLoading();
   try{
-    const [l,c,ct,f,d] = await Promise.all([
+    const [l,c,ct,f,d,tr] = await Promise.all([
       sb.from('leads').select('*').order('created_at',{ascending:false}),
       sb.from('clientes').select('*').order('created_at',{ascending:false}),
       sb.from('contratos').select('*').order('created_at',{ascending:false}),
       sb.from('faturas').select('*'),
       sb.from('despesas').select('*').order('data',{ascending:false}),
+      sb.from('tarefas').select('*').order('created_at',{ascending:false}),
     ]);
     if(l.error) throw l.error;
     if(c.error) throw c.error;
@@ -540,6 +570,7 @@ async function initData(){
     data.contratos= (ct.data||[]).map(mapContrato);
     data.faturas  = (f.data||[]).map(mapFatura);
     data.despesas = (d.data||[]).map(mapDespesa);
+    data.tarefas  = (tr.data||[]).map(mapTarefa);
     render();
   }catch(e){
     document.getElementById('main-content').innerHTML=`<div style="text-align:center;padding:100px 0"><div style="color:var(--red);font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase">Erro ao conectar com Supabase</div><div style="color:var(--text3);font-size:13px;margin-top:10px">${e.message}</div><button class="btn" style="margin-top:20px" onclick="initData()">Tentar novamente</button></div>`;
@@ -624,8 +655,8 @@ function formatCurrency(v){ if(!v&&v!==0) return '—'; return new Intl.NumberFo
 // ─── ROTEAMENTO ───────────────────────────────────────────────────────────────
 function switchTab(t){
   tab=t;
-  ['dashboard','pipeline','clientes','financeiro'].forEach(x=>document.getElementById('tab-'+x).classList.toggle('active',t===x));
-  const btns={dashboard:'',pipeline:'+ Novo Lead',clientes:'+ Novo Cliente',financeiro:'+ Nova Despesa'};
+  ['dashboard','pipeline','clientes','tarefas','financeiro'].forEach(x=>document.getElementById('tab-'+x).classList.toggle('active',t===x));
+  const btns={dashboard:'',pipeline:'+ Novo Lead',clientes:'+ Novo Cliente',tarefas:'+ Nova Tarefa',financeiro:'+ Nova Despesa'};
   const btn=document.getElementById('main-btn');
   btn.textContent=btns[t]||'';
   btn.style.visibility=t==='dashboard'?'hidden':'visible';
@@ -634,6 +665,7 @@ function switchTab(t){
 function handleMainBtn(){
   if(tab==='pipeline') openLeadForm(null);
   else if(tab==='clientes') openClienteForm();
+  else if(tab==='tarefas') openTarefaForm(null);
   else if(tab==='financeiro') openExpenseForm();
 }
 function setFilter(el,proj){
@@ -646,6 +678,7 @@ function render(){
   if(tab==='dashboard') renderDashboard();
   else if(tab==='pipeline') renderPipeline();
   else if(tab==='clientes') renderClientes();
+  else if(tab==='tarefas') renderTarefas();
   else if(tab==='financeiro') renderFinanceiro();
 }
 
@@ -1228,6 +1261,218 @@ async function saveContrato(clienteId){
   if(error){ toast('Erro ao salvar contrato'); return; }
   data.contratos.push(mapContrato(ctRow));
   closeModal(); render(); toast('Contrato adicionado!','success');
+}
+
+// ─── TAREFAS ──────────────────────────────────────────────────────────────────
+function renderTarefas(){
+  const hoje = new Date().toISOString().slice(0,10);
+  const clienteIds = new Set(filtered(data.clientes).map(c=>c.id));
+  const tarefas = projFilter==='all'
+    ? data.tarefas
+    : data.tarefas.filter(t=>!t.clienteId||clienteIds.has(t.clienteId));
+
+  // contadores por status para o header
+  const tot = tarefas.length;
+  const pend = tarefas.filter(t=>t.status!=='concluido').length;
+  const venc = tarefas.filter(t=>t.dataEntrega&&t.dataEntrega<hoje&&t.status!=='concluido').length;
+
+  let h=`
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+    <div style="display:flex;gap:20px;align-items:center">
+      <span style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);display:flex;align-items:center;gap:10px"><span style="width:18px;height:1px;background:var(--terra);display:inline-block"></span>Kanban de Tarefas</span>
+      <span style="font-size:12px;color:var(--text3)">${tot} tarefa${tot!==1?'s':''} · ${pend} pendente${pend!==1?'s':''}</span>
+      ${venc>0?`<span style="font-size:11px;font-weight:700;color:var(--red);background:rgba(226,75,74,0.1);border:1px solid rgba(226,75,74,0.25);padding:2px 10px;border-radius:2px">⚠ ${venc} vencida${venc!==1?'s':''}</span>`:''}
+    </div>
+  </div>
+  <div class="kanban" style="grid-template-columns:repeat(4,1fr)">`;
+
+  TASK_STATUSES.forEach(st=>{
+    const cols = tarefas.filter(t=>t.status===st);
+    h+=`<div class="col ts-${st}" ondragover="event.preventDefault()" ondrop="handleDropTarefa(event,'${st}')">
+      <div class="col-header">
+        <span class="col-title">${TASK_LABEL[st]}</span>
+        <span class="col-count">${cols.length}</span>
+      </div>`;
+    if(!cols.length) h+=`<div class="empty-col">Vazio</div>`;
+    cols.forEach(t=>{
+      const cli = data.clientes.find(c=>c.id===t.clienteId);
+      const checkTotal = t.checklist.length;
+      const checkFeito = t.checklist.filter(i=>i.feito).length;
+      const checkPct   = checkTotal>0?Math.round((checkFeito/checkTotal)*100):0;
+      const vencido    = t.dataEntrega&&t.dataEntrega<hoje&&st!=='concluido';
+      const venceHoje  = t.dataEntrega&&t.dataEntrega===hoje&&st!=='concluido';
+      const dataCorEntry = vencido?'var(--red)':venceHoje?'var(--amber)':'var(--text3)';
+
+      h+=`<div class="card" draggable="true"
+        ondragstart="event.dataTransfer.setData('text/plain','${t.id}')"
+        onclick="openTarefaForm('${t.id}')">
+        ${cli?`<div class="card-proj"><span class="badge ${BADGE[cli.proj]}">${cli.nome}</span></div>`:''}
+        <div class="card-name" style="margin-bottom:${checkTotal>0||t.obs?'8px':'10px'}">${t.titulo}</div>
+        ${t.obs?`<div style="font-size:12px;color:var(--text3);margin-bottom:8px;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.obs}</div>`:''}
+        ${checkTotal>0?`
+        <div style="margin-bottom:10px">
+          ${t.checklist.slice(0,3).map((item,i)=>`
+          <div class="ckl-item" onclick="event.stopPropagation();toggleTarefaCheck('${t.id}',${i},event)">
+            <div class="ckl-cb ${item.feito?'done':''}">${item.feito?'<span style="color:#fff;font-size:10px;font-weight:900">✓</span>':''}</div>
+            <span class="ckl-text ${item.feito?'done':''}">${item.texto}</span>
+          </div>`).join('')}
+          ${checkTotal>3?`<div style="font-size:11px;color:var(--text4);padding:4px 0">+${checkTotal-3} mais</div>`:''}
+          <div style="margin-top:6px;height:3px;background:var(--border);border-radius:2px;overflow:hidden">
+            <div style="height:100%;width:${checkPct}%;background:${checkPct===100?'var(--green)':'var(--terra)'};border-radius:2px"></div>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px">${checkFeito}/${checkTotal} concluídos</div>
+        </div>`:''}
+        <div class="card-footer" style="margin-top:4px">
+          <span style="font-size:11px;color:var(--text3)">${t.dataInicio?new Date(t.dataInicio+'T00:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):''}</span>
+          ${t.dataEntrega?`<div class="card-followup" style="color:${dataCorEntry};background:${vencido?'rgba(226,75,74,0.08)':venceHoje?'rgba(239,159,39,0.08)':'rgba(239,159,39,0.08)'};border-color:${vencido?'rgba(226,75,74,0.3)':venceHoje?'rgba(239,159,39,0.3)':'rgba(239,159,39,0.15)'}">
+            ${vencido?'⚠':'↻'} ${new Date(t.dataEntrega+'T00:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}
+          </div>`:''}
+        </div>
+      </div>`;
+    });
+    h+=`</div>`;
+  });
+  h+=`</div>`;
+  document.getElementById('main-content').innerHTML=h;
+}
+
+async function handleDropTarefa(e,status){
+  const id=e.dataTransfer.getData('text/plain');
+  const t=data.tarefas.find(x=>x.id===id); if(!t) return;
+  const old=t.status; t.status=status; render();
+  const {error}=await sb.from('tarefas').update({status}).eq('id',id);
+  if(error){ t.status=old; render(); toast('Erro ao mover tarefa'); }
+}
+
+async function toggleTarefaCheck(tarefaId,idx,event){
+  if(event) event.stopPropagation();
+  const t=data.tarefas.find(x=>x.id===tarefaId); if(!t) return;
+  t.checklist[idx].feito=!t.checklist[idx].feito;
+  render();
+  const {error}=await sb.from('tarefas').update({checklist:t.checklist}).eq('id',tarefaId);
+  if(error){ t.checklist[idx].feito=!t.checklist[idx].feito; render(); toast('Erro ao atualizar checklist'); }
+}
+
+// ── checklist editor global (usado dentro do modal) ───────────────────────────
+window._ckl = [];
+function _renderCkl(){
+  const el=document.getElementById('ckl-list'); if(!el) return;
+  if(!window._ckl.length){
+    el.innerHTML=`<div style="font-size:12px;color:var(--text4);padding:8px 0;text-align:center;letter-spacing:1px">Nenhum item adicionado</div>`;
+    return;
+  }
+  el.innerHTML=window._ckl.map((item,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div onclick="window._ckl[${i}].feito=!window._ckl[${i}].feito;_renderCkl()"
+        style="width:18px;height:18px;border-radius:3px;border:1px solid ${item.feito?'var(--terra)':'var(--border2)'};background:${item.feito?'var(--terra)':'transparent'};cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s">
+        ${item.feito?'<span style="color:#fff;font-size:11px;font-weight:900">✓</span>':''}
+      </div>
+      <span style="flex:1;font-size:13px;color:${item.feito?'var(--text3)':'var(--text)'};${item.feito?'text-decoration:line-through':''}">${item.texto}</span>
+      <button onclick="window._ckl.splice(${i},1);_renderCkl()"
+        style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:18px;line-height:1;padding:0 2px;transition:color .15s"
+        onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text4)'">×</button>
+    </div>`).join('');
+}
+function _addCkl(){
+  const el=document.getElementById('ckl-new'); if(!el) return;
+  const txt=el.value.trim(); if(!txt) return;
+  window._ckl.push({texto:txt,feito:false});
+  el.value=''; _renderCkl(); el.focus();
+}
+
+function openTarefaForm(id){
+  const t=id?data.tarefas.find(x=>x.id===id):null;
+  window._ckl = t ? JSON.parse(JSON.stringify(t.checklist)) : [];
+  const cliOptions = data.clientes
+    .filter(c=>!isClienteVencido(c))
+    .map(c=>`<option value="${c.id}" ${t&&t.clienteId===c.id?'selected':''}>${c.nome}${c.empresa?' — '+c.empresa:''}</option>`)
+    .join('');
+
+  modal(`<div class="modal" style="width:540px;max-width:96vw" onclick="event.stopPropagation()">
+    <div class="modal-divider"></div>
+    <div class="modal-title">${t?'Editar Tarefa':'Nova Tarefa'}</div>
+
+    <div class="form-row">
+      <label class="form-label">Cliente</label>
+      <select class="form-input" id="tf_cli">
+        <option value="">Sem cliente vinculado</option>
+        ${cliOptions}
+      </select>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">Título da tarefa</label>
+      <input class="form-input" id="tf_titulo" value="${t?t.titulo:''}" placeholder="Ex: Entregar relatório mensal">
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">Status</label>
+      <select class="form-input" id="tf_status">
+        ${TASK_STATUSES.map(s=>`<option value="${s}" ${t&&t.status===s?'selected':''}>${TASK_LABEL[s]}</option>`).join('')}
+      </select>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-row">
+        <label class="form-label">Data de início</label>
+        <input class="form-input" type="date" id="tf_inicio" value="${t?t.dataInicio:''}">
+      </div>
+      <div class="form-row">
+        <label class="form-label">Data de entrega</label>
+        <input class="form-input" type="date" id="tf_entrega" value="${t?t.dataEntrega:''}">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">Observações</label>
+      <textarea class="form-input" id="tf_obs" style="min-height:70px">${t?t.obs:''}</textarea>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">Checklist</label>
+      <div id="ckl-list" style="margin-bottom:8px"></div>
+      <div style="display:flex;gap:8px">
+        <input class="form-input" id="ckl-new" placeholder="Adicionar item..."
+          style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();_addCkl()}">
+        <button class="btn btn-ghost" style="padding:8px 16px;font-size:16px;line-height:1" onclick="_addCkl()">+</button>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      ${t?`<button class="btn btn-danger" onclick="deleteTarefa('${t.id}')">Remover</button>`:''}
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn" onclick="${t?`updateTarefa('${t.id}')`:'saveTarefa()'}">${t?'Salvar':'Adicionar'}</button>
+    </div>
+  </div>`);
+  // renderiza checklist inicial
+  setTimeout(_renderCkl,0);
+}
+
+async function saveTarefa(){
+  const titulo=val('tf_titulo'); if(!titulo){ toast('Informe o título da tarefa'); return; }
+  const payload={cliente_id:val('tf_cli')||null,titulo,obs:val('tf_obs'),status:val('tf_status')||'a-fazer',data_inicio:val('tf_inicio')||null,data_entrega:val('tf_entrega')||null,checklist:window._ckl||[]};
+  const {data:row,error}=await sb.from('tarefas').insert(payload).select().single();
+  if(error){ toast('Erro ao salvar tarefa: '+error.message); return; }
+  data.tarefas.unshift(mapTarefa(row));
+  closeModal(); render(); toast('Tarefa criada!','success');
+}
+
+async function updateTarefa(id){
+  const titulo=val('tf_titulo'); if(!titulo){ toast('Informe o título'); return; }
+  const payload={cliente_id:val('tf_cli')||null,titulo,obs:val('tf_obs'),status:val('tf_status')||'a-fazer',data_inicio:val('tf_inicio')||null,data_entrega:val('tf_entrega')||null,checklist:window._ckl||[]};
+  const {error}=await sb.from('tarefas').update(payload).eq('id',id);
+  if(error){ toast('Erro ao atualizar tarefa'); return; }
+  const t=data.tarefas.find(x=>x.id===id);
+  if(t) Object.assign(t,{clienteId:payload.cliente_id,titulo:payload.titulo,obs:payload.obs,status:payload.status,dataInicio:payload.data_inicio||'',dataEntrega:payload.data_entrega||'',checklist:payload.checklist});
+  closeModal(); render();
+}
+
+async function deleteTarefa(id){
+  if(!confirm('Remover esta tarefa?')) return;
+  const {error}=await sb.from('tarefas').delete().eq('id',id);
+  if(error){ toast('Erro ao remover tarefa'); return; }
+  data.tarefas=data.tarefas.filter(x=>x.id!==id);
+  closeModal(); render();
 }
 
 /* Financeiro helpers */

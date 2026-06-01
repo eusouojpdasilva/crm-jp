@@ -1287,7 +1287,12 @@ function renderTarefas(){
   <div class="kanban" style="grid-template-columns:repeat(4,1fr)">`;
 
   TASK_STATUSES.forEach(st=>{
-    const cols = tarefas.filter(t=>t.status===st);
+    const cols = tarefas.filter(t=>t.status===st).sort((a,b)=>{
+      if(!a.dataEntrega && !b.dataEntrega) return 0;
+      if(!a.dataEntrega) return 1;
+      if(!b.dataEntrega) return -1;
+      return a.dataEntrega.localeCompare(b.dataEntrega);
+    });
     h+=`<div class="col ts-${st}" ondragover="event.preventDefault()" ondrop="handleDropTarefa(event,'${st}')">
       <div class="col-header">
         <span class="col-title">${TASK_LABEL[st]}</span>

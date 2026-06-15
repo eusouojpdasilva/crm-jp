@@ -530,7 +530,7 @@ const _meta = loadMeta();
 let data = { leads:[], clientes:[], contratos:[], faturas:[], despesas:[], tarefas:[], metaMensal:_meta.metaMensal, currency:_meta.currency };
 
 // ─── FIELD MAPPING (DB snake_case → JS camelCase) ─────────────────────────────
-const mapLead    = r => ({id:r.id, nome:r.nome, nicho:r.nicho, proj:r.proj, status:r.status, valorEstimado:r.valor_estimado?String(r.valor_estimado):'', tipo:r.tipo, followup:r.followup, obs:r.obs, contatoData:r.contato_data, clienteId:r.cliente_id, createdAt:r.created_at});
+const mapLead    = r => ({id:r.id, nome:r.nome, nicho:r.nicho, proj:r.proj, status:r.status, valorEstimado:r.valor_estimado?String(r.valor_estimado):'', moeda:r.moeda||'BRL', tipo:r.tipo, followup:r.followup, obs:r.obs, contatoData:r.contato_data, clienteId:r.cliente_id, createdAt:r.created_at});
 const mapTarefa  = r => ({id:r.id, clienteId:r.cliente_id, titulo:r.titulo, obs:r.obs||'', status:r.status||'a-fazer', dataInicio:r.data_inicio||'', dataEntrega:r.data_entrega||'', checklist:r.checklist||[], createdAt:r.created_at});
 const mapCliente = r => ({id:r.id, nome:r.nome, empresa:r.empresa, instagram:r.instagram, proj:r.proj, status:r.status, comoConheceu:r.como_conheceu, observacao:r.observacao, leadId:r.lead_id, av:r.av, createdAt:r.created_at, cidade:r.cidade||'', estado:r.estado||'', pais:r.pais||'Brasil'});
 const mapContrato= r => ({id:r.id, clienteId:r.cliente_id, valor:r.valor, recorrencia:r.recorrencia, dataInicio:r.data_inicio, vencimento:r.vencimento, status:r.status, moeda:r.moeda, diaVencimento:r.dia_vencimento||null, numParcelas:r.num_parcelas||null});
@@ -907,12 +907,25 @@ function _recSelect(selected){
 function renderPipeline(){
   // SUPABASE: await supabase.from('leads').select('*').order('created_at',{ascending:false})
   const leads=filtered(data.leads);
-  const pipeline=leads.reduce((s,l)=>{ const n=parseFloat((l.valorEstimado||'').replace(/[^\d.,]/g,'').replace(',','.')); return s+(isNaN(n)?0:n); },0);
+  // Agrupa pipeline por moeda
+  const pipelineMap = {};
+  leads.forEach(l=>{
+    const n=parseFloat((l.valorEstimado||'').replace(/[^\d.,]/g,'').replace(',','.'));
+    if(isNaN(n)||n<=0) return;
+    const m=l.moeda||'BRL';
+    pipelineMap[m]=(pipelineMap[m]||0)+n;
+  });
+  const MOEDA_SYMBOL = {BRL:'R$', USD:'US$', EUR:'€'};
+  const pipelineHtml = Object.keys(pipelineMap).length===0 ? '—' :
+    Object.entries(pipelineMap).map(([m,v])=>{
+      const fmt = new Intl.NumberFormat(m==='BRL'?'pt-BR':'en-US',{minimumFractionDigits:2,maximumFractionDigits:2}).format(v);
+      return `<span style="display:inline-flex;align-items:baseline;gap:4px"><span style="font-size:13px;font-weight:600;opacity:.7">${MOEDA_SYMBOL[m]||m}</span>${fmt}</span>`;
+    }).join('<span style="font-size:20px;color:var(--text3);margin:0 6px">+</span>');
   let h=`<div class="stats">
     <div class="stat"><div class="stat-label">Total Leads</div><div class="stat-value">${leads.length}</div></div>
     <div class="stat"><div class="stat-label">Em Proposta</div><div class="stat-value">${leads.filter(l=>l.status==='proposta').length}</div></div>
     <div class="stat"><div class="stat-label">Fechados</div><div class="stat-value accent">${leads.filter(l=>l.status==='fechado'&&l.clienteId).length} <span style="font-size:14px;font-weight:500;color:var(--text2)">convertidos</span></div></div>
-    <div class="stat"><div class="stat-label">Pipeline Estimado</div><div class="stat-value accent">${formatCurrency(pipeline)}</div></div>
+    <div class="stat"><div class="stat-label">Pipeline Estimado</div><div class="stat-value accent" style="font-size:${Object.keys(pipelineMap).length>1?'22px':'36px'};line-height:1.2">${pipelineHtml}</div></div>
   </div>
   <div class="section-header"><span class="section-title">Kanban de Leads</span></div>
   <div class="kanban">`;
@@ -931,7 +944,7 @@ function renderPipeline(){
         <div class="card-name">${l.nome}</div>
         <div class="card-nicho">${l.nicho||'&nbsp;'}</div>
         <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-          <div class="card-value">${l.valorEstimado||'—'}</div>
+          <div class="card-value">${l.valorEstimado?`<span style="font-size:11px;opacity:.6;margin-right:2px">${l.moeda||'BRL'}</span>${l.valorEstimado}`:'—'}</div>
           ${l.followup&&st!=='fechado'?`<div class="card-followup">↻ ${new Date(l.followup+'T00:00:00').toLocaleDateString('pt-BR')}</div>`:''}
         </div>
         <div class="card-footer">
@@ -969,7 +982,16 @@ function openLeadForm(id){
     <div class="form-row"><label class="form-label">Status</label><select class="form-input" id="fs">${STATUSES.map(s=>`<option value="${s}" ${l&&l.status===s?'selected':''}>${ST_LABEL[s]}</option>`).join('')}</select></div>
     <div class="form-row"><label class="form-label">Tipo de serviço</label><select class="form-input" id="ftipo">${['Assessoria','Consultoria','GMN','Outros'].map(t=>`<option ${l&&l.tipo===t?'selected':''}>${t}</option>`).join('')}</select></div>
     <div class="form-row"><label class="form-label">Próximo follow-up</label><input class="form-input" type="date" id="ffup" value="${l&&l.followup?l.followup:''}"></div>
-    <div class="form-row"><label class="form-label">Valor estimado</label><input class="form-input" id="fv" value="${l?l.valorEstimado||'':''}" placeholder="Ex: 3500"></div>
+    <div class="form-row"><label class="form-label">Valor estimado</label>
+      <div style="display:flex;gap:8px">
+        <select class="form-input" id="fmoeda" style="width:90px;flex-shrink:0">
+          <option value="BRL" ${!l||l.moeda==='BRL'?'selected':''}>BRL</option>
+          <option value="USD" ${l&&l.moeda==='USD'?'selected':''}>USD</option>
+          <option value="EUR" ${l&&l.moeda==='EUR'?'selected':''}>EUR</option>
+        </select>
+        <input class="form-input" id="fv" value="${l?l.valorEstimado||'':''}" placeholder="Ex: 3500">
+      </div>
+    </div>
     <div class="form-row"><label class="form-label">Observações</label><textarea class="form-input" id="fo">${l?l.obs||'':''}</textarea></div>
     <div class="form-actions">
       ${l&&!convertido?`<button class="btn btn-danger" onclick="deleteLead('${l.id}')">Remover</button>`:''}
@@ -981,18 +1003,18 @@ function openLeadForm(id){
 }
 
 async function saveLead(){
-  const payload={nome:val('fn')||'Sem nome',nicho:val('fni'),proj:val('fp'),status:val('fs'),valor_estimado:parseFloat(val('fv').replace(/[^\d.,]/g,'').replace(',','.'))||null,tipo:val('ftipo'),followup:val('ffup')||null,obs:val('fo'),contato_data:new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}),cliente_id:null};
+  const payload={nome:val('fn')||'Sem nome',nicho:val('fni'),proj:val('fp'),status:val('fs'),valor_estimado:parseFloat(val('fv').replace(/[^\d.,]/g,'').replace(',','.'))||null,moeda:val('fmoeda')||'BRL',tipo:val('ftipo'),followup:val('ffup')||null,obs:val('fo'),contato_data:new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}),cliente_id:null};
   const {data:row,error}=await sb.from('leads').insert(payload).select().single();
   if(error){ toast('Erro ao salvar lead: '+error.message); return; }
   data.leads.unshift(mapLead(row));
   closeModal(); render(); toast('Lead adicionado!','success');
 }
 async function updateLead(id){
-  const payload={nome:val('fn'),nicho:val('fni'),proj:val('fp'),status:val('fs'),valor_estimado:parseFloat(val('fv').replace(/[^\d.,]/g,'').replace(',','.'))||null,tipo:val('ftipo'),followup:val('ffup')||null,obs:val('fo')};
+  const payload={nome:val('fn'),nicho:val('fni'),proj:val('fp'),status:val('fs'),valor_estimado:parseFloat(val('fv').replace(/[^\d.,]/g,'').replace(',','.'))||null,moeda:val('fmoeda')||'BRL',tipo:val('ftipo'),followup:val('ffup')||null,obs:val('fo')};
   const {error}=await sb.from('leads').update(payload).eq('id',id);
   if(error){ toast('Erro ao atualizar lead'); return; }
   const l=data.leads.find(x=>x.id===id);
-  if(l) Object.assign(l,{nome:payload.nome,nicho:payload.nicho,proj:payload.proj,status:payload.status,valorEstimado:payload.valor_estimado?String(payload.valor_estimado):'',tipo:payload.tipo,followup:payload.followup,obs:payload.obs});
+  if(l) Object.assign(l,{nome:payload.nome,nicho:payload.nicho,proj:payload.proj,status:payload.status,valorEstimado:payload.valor_estimado?String(payload.valor_estimado):'',moeda:payload.moeda,tipo:payload.tipo,followup:payload.followup,obs:payload.obs});
   closeModal(); render();
 }
 async function deleteLead(id){

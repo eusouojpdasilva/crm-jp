@@ -910,6 +910,7 @@ function renderPipeline(){
   // Agrupa pipeline por moeda
   const pipelineMap = {};
   leads.forEach(l=>{
+    if(l.status==='perdido') return;
     const n=parseFloat((l.valorEstimado||'').replace(/[^\d.,]/g,'').replace(',','.'));
     if(isNaN(n)||n<=0) return;
     const m=l.moeda||'BRL';

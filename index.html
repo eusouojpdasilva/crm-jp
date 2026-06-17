@@ -931,7 +931,12 @@ function renderPipeline(){
   <div class="section-header"><span class="section-title">Kanban de Leads</span></div>
   <div class="kanban">`;
   STATUSES.forEach(st=>{
-    const cols=leads.filter(l=>l.status===st);
+    const cols=leads.filter(l=>l.status===st).sort((a,b)=>{
+      if(!a.followup && !b.followup) return 0;
+      if(!a.followup) return 1;
+      if(!b.followup) return -1;
+      return a.followup.localeCompare(b.followup);
+    });
     h+=`<div class="col st-${st}" ondragover="event.preventDefault()" ondrop="handleDrop(event,'${st}')">
       <div class="col-header"><span class="col-title">${ST_LABEL[st]}</span><span class="col-count">${cols.length}</span></div>`;
     if(!cols.length) h+=`<div class="empty-col">Vazio</div>`;
